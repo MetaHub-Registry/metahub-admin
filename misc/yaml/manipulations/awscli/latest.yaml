@@ -1,0 +1,38 @@
+# optional name and tag, must match with POSIX path and file name (tag)
+name: awscli
+tag: latest
+## environment adjustments globally
+## will be overwritten by more specific once if present
+config:
+  environment:
+    prepend:
+      PATH: /usr/local/awscli/bin
+  entrypoint:
+    - filter: ifNull 
+      # does some magic before and takes CMD and `exec $@` at the end
+      set: /usr/local/awscli/bin/entrypoint.sh
+    - filter: always
+      # exec $OLD_ENTRYPOINT $@
+      set: /usr/local/awscli/bin/wrapper.sh
+  workdir:
+    - filter: ifNull
+      set: /data
+  volumes: [/data] # added if not already in
+  labels: # are labels added when manipulations are done automagically?
+    org.extent.image.glibc: GLIBC_2.30
+layers:
+  - image: registry.gitlab.com/qnib-pub-containers/layers/awscli:main
+    # We expect a manifest - not a list
+    platform:
+      os: linux
+      arch: amd64
+    filter:
+      os: 
+        name: alpine
+        min_ver:
+          major: 3
+          minor: 15
+          patch: 0
+        max_ver:
+          major: 3
+          minor: 15

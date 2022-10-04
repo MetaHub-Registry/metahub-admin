@@ -1,0 +1,58 @@
+package magazine
+
+import (
+	"context"
+
+	"github.com/opencontainers/go-digest"
+	"github.com/sirupsen/logrus"
+	"github.com/metahub-registry/metahub-admin/pkg/upstream"
+	ycfg "github.com/metahub-registry/metahub-admin/pkg/yaml/config"
+	"github.com/metahub-registry/metahub-api/pkg/types"
+)
+
+func (mag Magazine) CachManifest(ctx context.Context, m ycfg.Manifest) (mani types.Manifest, err error) {
+	up, err := m.ToUpstreamTriple()
+	if err != nil {
+		logrus.Error(err)
+		return
+	}
+	// The Manifest cached has a Data filed with the original data blob (matching the digest)
+	// in addition it has fields populated with the parsed data.
+	mani, isCached, err := mag.Minio.GetManifest(ctx, up)
+	if err != nil {
+		logrus.Error(err)
+		return
+	}
+	logrus.Infof("Caching manifest for %-101s -> %t", up.GetLabel(), isCached)
+	if !isCached {
+		b, blob, err := upstream.GetManifestByUpstreamTripleByTag(ctx, up)
+		if err != nil {
+			logrus.Error(err)
+			return mani, err
+		}
+		// The blob 'b' is the original data blob (matching the digest), it contains refrerences to the config and layers
+		mani, err = types.NewManifestFromBytes(b)
+		if err != nil {
+			logrus.Error(err)
+			return mani, err
+		}
+		up.Digest = digest.FromBytes(b)
+		up.Size = blob.Size
+		err = mag.Minio.PutManifest(ctx, b, up)
+		if err != nil {
+			logrus.Error(err)
+			return mani, err
+		}
+		mani.Data = b
+		if err != nil {
+			logrus.Error(err)
+			return mani, err
+		}
+	}
+	mani.Upstream = types.Upstream{
+		Reg:  up.Reg,
+		Repo: up.Repo,
+		Tag:  up.Tag,
+	}
+	return
+}
