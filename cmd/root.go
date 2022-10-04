@@ -47,6 +47,17 @@ func init() {
 	// Cobra also supports local flags, which will only run
 	// when this action is called directly.
 	//rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	rootCmd.PersistentFlags().String("minio-url", "minio:9000", "URL to MinIO/S3")
+	rootCmd.PersistentFlags().String("minio-user", "minio", "User/AccessKey for MinIO/S3")
+	rootCmd.PersistentFlags().String("minio-pass", "", "Password/SecretKey for MinIO/S3")
+	rootCmd.PersistentFlags().Bool("minio-insecure", false, "Disable SSL for MinIO/S3")
+	rootCmd.PersistentFlags().String("minio-region", "us-east-1", "Region for MinIO/S3")
+	// Neo4j
+	rootCmd.PersistentFlags().StringVar(&neoConfig.URL, "neo-url", config.NeoURL, fmt.Sprintf("NEO4j database url (default is '%s')", config.NeoURL))
+	viper.BindPFlag("neo_url", rootCmd.Flags().Lookup("neo-url"))
+	//rootCmd.PersistentFlags().StringVar(&neoConfig.URL, "neo-url", config.NeoURL, fmt.Sprintf("NEO4j database url (default is '%s')", config.NeoURL))
+	//viper.BindPFlag("neo_url", rootCmd.Flags().Lookup("neo-url"))
+
 }
 
 // initConfig reads in config file and ENV variables if set.

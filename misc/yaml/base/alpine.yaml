@@ -1,0 +1,12 @@
+## Collection of base images detected by MetaHub 
+## For manipulations, the layers are used as a matching criteria.
+## -> all layers must be the lowest layers in an image to match
+### the following images are downloaded and the `/etc/os-release` file is 
+### parsed to get the OS name and version, which will be used as a source for OS matching
+repo: docker.io/library/alpine
+tags: \d+\.\d+\.\d+
+archs:
+ - linux/amd64
+ - linux/arm64/v8
+ - linux/arm/v7 
+ - linux/arm/v6

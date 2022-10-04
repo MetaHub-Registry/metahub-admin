@@ -1,0 +1,12 @@
+profile:
+  name: awscli
+  actions:
+    - name: manifest-filter
+      event: post-manifest-list-get
+      args:
+        value: ""
+    - name: manifest-add
+      event: post-manifest-get
+      args:
+        repository: qnib/.*
+        manipulation: awscli:latest

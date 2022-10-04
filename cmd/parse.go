@@ -14,19 +14,13 @@ import (
 // parseCmd represents the parse command
 var parseCmd = &cobra.Command{
 	Use:   "parse",
-	Short: "A brief description of your command",
-	Run: func(cmd *cobra.Command, args []string) {
-		config.SetCommandValues(cmd)
-		neoUrl, _ := cmd.Flags().GetString("neo-url")
-		fmt.Println("neoUrl: ", neoUrl)
-	},
+	Short: "Parse YAML files (profiles, collections, base, manipulation) and store them in the database",
+	Run:   pCmd,
 }
 
 func init() {
 	rootCmd.AddCommand(parseCmd)
 	// Here you will define your flags and configuration settings.
-	parseCmd.PersistentFlags().StringVar(&neoConfig.URL, "neo-url", config.NeoURL, fmt.Sprintf("NEO4j database url (default is '%s')", config.NeoURL))
-	viper.BindPFlag("neo_url", rootCmd.Flags().Lookup("neo-url"))
 	// Cobra supports Persistent Flags which will work for this command
 	// and all subcommands, e.g.:
 	// parseCmd.PersistentFlags().String("foo", "", "A help for foo")
@@ -34,4 +28,11 @@ func init() {
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
 	// parseCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+}
+
+func pCmd(cmd *cobra.Command, args []string) {
+	config.SetCommandValues(cmd)
+	fmt.Println("neoUrl: ", viper.Get("neo_url"))
+	neoUrl, _ := cmd.Flags().GetString("neo-url")
+	fmt.Println("neoUrl: ", neoUrl)
 }
