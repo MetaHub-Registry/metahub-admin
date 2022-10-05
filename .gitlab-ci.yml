@@ -5,11 +5,11 @@ stages:
 test:
     stage: coveragetest
     image: registry.gitlab.com/qnib-pub-containers/cicd/golang:1.19.1
-    #services:
-    #  - docker:20.10.17-dind
-    #variables:
-    #  DOCKER_HOST: tcp://docker:2375/
-    #  DOCKER_DRIVER: overlay2
+    services:
+      - docker:20.10.17-dind
+    variables:
+      DOCKER_HOST: tcp://docker:2375/
+      DOCKER_DRIVER: overlay2
     before_script:
       - git clone https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.com/qnib-golang/metahub /tmp/gitlab.com/qnib-golang/metahub
       - go mod edit -replace gitlab.com/qnib-golang/metahub=/tmp/gitlab.com/qnib-golang/metahub       

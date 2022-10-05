@@ -1,18 +1,19 @@
 package upstream
 
 import (
+	"encoding/json"
 	"fmt"
 
 	digestLib "github.com/opencontainers/go-digest"
 )
 
 type UpstreamTriple struct {
-	Reg       string
-	Repo      string
-	Tag       string
-	MediaType string
-	Size      int64
-	Digest    digestLib.Digest
+	Reg       string           `json:"reg"`
+	Repo      string           `json:"repo"`
+	Tag       string           `json:"tag"`
+	MediaType string           `json:"mediaType"`
+	Size      int64            `json:"size"`
+	Digest    digestLib.Digest `json:"digest"`
 }
 
 func NewUpstreamTriple(k map[string]interface{}) (up UpstreamTriple, err error) {
@@ -43,4 +44,9 @@ func (upt UpstreamTriple) GetLabel() string {
 func (upt UpstreamTriple) GetObjPath() string {
 	// Storage path for manifest in Objectstore
 	return fmt.Sprintf("%s/%s/%s", upt.Reg, upt.Repo, upt.Tag)
+}
+
+func (upt UpstreamTriple) ToBytes() []byte {
+	b, _ := json.Marshal(upt)
+	return b
 }

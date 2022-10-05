@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"io"
 	"os"
 	"reflect"
 
@@ -13,7 +12,6 @@ import (
 	"github.com/mitchellh/go-homedir"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
-	"github.com/metahub-registry/metahub-api/pkg/types"
 )
 
 const (
@@ -56,6 +54,7 @@ func NewMinio(cfgFile string) (m Minio, err error) {
 		// Search config in home directory with name ".cobra-example" (without extension).
 		viper.AddConfigPath(home)
 		viper.SetConfigName(".metahub-admin")
+		viper.SetConfigType("yaml")
 	}
 	m.BucketConfig = map[string]BucketConfig{
 		layerBucket:     {},
@@ -111,7 +110,24 @@ func NewMinio(cfgFile string) (m Minio, err error) {
 		} else {
 			bCfg.Ssl = bc.Ssl
 		}
-		// Connect
+		m.BucketConfig[b] = bCfg
+	}
+	err = m.ConnectClients()
+	if err != nil {
+		logrus.Error(err)
+	}
+	return
+}
+
+func (m Minio) ConnectClients() (err error) {
+	for _, v := range reflect.ValueOf(m.BucketConfig).MapKeys() {
+		b := fmt.Sprintf("%s", v)
+		var bCfg BucketConfig
+		if bc, ok := m.BucketConfig[b]; !ok {
+			logrus.Errorf("Bucket '%s' not found in config", b)
+		} else {
+			bCfg = bc
+		}
 		logrus.Infof("Connecting to minio bucket '%s'", bCfg.Bucket)
 
 		cli, e := minio.New(bCfg.URL, &minio.Options{
@@ -127,13 +143,13 @@ func NewMinio(cfgFile string) (m Minio, err error) {
 		bCfg.Client = cli
 		m.BucketConfig[b] = bCfg
 	}
-
 	return
 }
 
 func (m Minio) BucketCheck() (err error) {
 	ctx := context.Background()
 	for _, bc := range m.BucketConfig {
+		logrus.Info("Checking bucket ", bc.Bucket)
 		exists, err := bc.Client.BucketExists(ctx, bc.Bucket)
 		if err != nil {
 			logrus.Errorf("Error checking bucket %s: %s\n", bc.Bucket, err)
@@ -167,21 +183,5 @@ func (m Minio) ConfigStatObj(ctx context.Context, object string) (obj minio.Obje
 func (m Minio) ManifestsPutObj(ctx context.Context, object string, data []byte) (err error) {
 	cli := m.BucketConfig[manifestsBucket].Client
 	_, err = cli.PutObject(ctx, manifestsBucket, object, bytes.NewReader(data), int64(len(data)), minio.PutObjectOptions{})
-	return
-}
-
-func (m Minio) ManifestGetObj(ctx context.Context, path string) (mani types.Manifest, err error) {
-	cli := m.BucketConfig[manifestsBucket].Client
-	obj, err := cli.GetObject(ctx, manifestsBucket, path, minio.GetObjectOptions{})
-	if err != nil {
-		logrus.Errorf("Error getting manifest: %s", err)
-		return
-	}
-	defer obj.Close()
-	b, e := io.ReadAll(obj)
-	if e != nil {
-		logrus.Fatal(e)
-	}
-	mani, err = types.NewManifestFromBytes(b)
 	return
 }
