@@ -1,6 +1,9 @@
 package neo
 
 import (
+	"context"
+	"fmt"
+
 	"github.com/neo4j/neo4j-go-driver/v4/neo4j"
 	"github.com/sirupsen/logrus"
 	"github.com/metahub-registry/metahub-api/pkg/types"
@@ -109,6 +112,63 @@ func (n Neo) GetProfileFilterPlatformPairs() (pfs []types.ProfileFilterPlatform,
 		}
 		plat.Features = v.(string)
 		pfs = append(pfs, types.ProfileFilterPlatform{Profile: p, Filter: f, Platform: plat})
+	}
+	return
+}
+
+func (n Neo) GetProfile(prf types.Profile) (prfID int64, success bool, err error) {
+	q := `MATCH (n:Profile) WHERE n.name = "%s" RETURN id(n) AS ID`
+	query := fmt.Sprintf(q, prf.Name)
+	session := n.neoDriver.NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeWrite})
+	defer session.Close()
+	result, err := session.Run(query, map[string]interface{}{})
+	if err != nil {
+		logrus.Errorf("Failed to run query: %s", err)
+		return
+	}
+	if result.Next() {
+		v, ok := result.Record().Get("ID")
+		if !ok {
+			err = fmt.Errorf("failed to get ID")
+			return
+		}
+		prfID = v.(int64)
+		success = true
+	}
+	return
+}
+
+func (n Neo) CreateProfile(prf types.Profile) (prfID int64, err error) {
+	q := `CREATE (n:Profile {name: "%s"}) RETURN id(n) AS ID`
+	query := fmt.Sprintf(q, prf.Name)
+	session := n.neoDriver.NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeWrite})
+	defer session.Close()
+	result, err := session.Run(query, map[string]interface{}{})
+	if err != nil {
+		logrus.Errorf("failed to create conifg: %v", err)
+		return
+	}
+	if result.Next() {
+		v, ok := result.Record().Get("ID")
+		if !ok {
+			err = fmt.Errorf("failed to get ID")
+			return
+		}
+		prfID = v.(int64)
+	}
+	return
+}
+
+func (n Neo) LinkProfileToFilter(ctx context.Context, profileID, filterID int64) (err error) {
+	q := `MATCH (p:Profile),(f:Filter) WHERE id(p) = %d AND id(f) = %d`
+	q += ` MERGE (p)-[:USES]->(f)`
+	query := fmt.Sprintf(q, profileID, filterID)
+	session := n.neoDriver.NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeWrite})
+	defer session.Close()
+	_, err = session.Run(query, map[string]interface{}{})
+	if err != nil {
+		logrus.Errorf("failed to create link (p:Profile)-[:USES]->(f:Filter): %v", err)
+		return
 	}
 	return
 }
