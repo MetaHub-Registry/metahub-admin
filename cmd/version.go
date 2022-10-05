@@ -13,7 +13,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var version = "0.0.7"
+var version = "0.0.8"
 var jsonFlag bool
 
 type Version struct {
