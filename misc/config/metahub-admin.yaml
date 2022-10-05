@@ -9,4 +9,4 @@ neo4j:
   dbname: neo4j
   user: neo4j
   password: test
-  url: bolt://portainer.fritz.box:7687
+  url: bolt://localhost:7687

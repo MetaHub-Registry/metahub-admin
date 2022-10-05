@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"context"
-	"fmt"
 	"os"
 
 	"github.com/sirupsen/logrus"
@@ -35,8 +34,6 @@ func init() {
 func pManiCmd(cmd *cobra.Command, args []string) {
 	ctx := context.Background()
 	config.SetCommandValues(cmd)
-	neoUrl, _ := cmd.Flags().GetString("neo-url")
-	fmt.Println("neoUrl: ", neoUrl)
 	switch len(args) {
 	case 1:
 		dpath := args[0]

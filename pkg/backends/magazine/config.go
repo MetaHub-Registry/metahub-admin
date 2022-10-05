@@ -19,6 +19,7 @@ func (mag Magazine) CachImageConfig(ctx context.Context, mani *types.Manifest) (
 		Tag:    mani.Upstream.Tag,
 		Digest: digest.FromString(mani.Config.Digest),
 	}
+
 	cfg, isCached, err := mag.Minio.GetConfig(ctx, up, mani.Config)
 	_ = cfg
 	if err != nil {
@@ -52,5 +53,19 @@ func (mag Magazine) CachImageConfig(ctx context.Context, mani *types.Manifest) (
 		mani.Platform.Variant = imgCfg.Variant
 	}
 
+	return
+}
+
+func (mag Magazine) NeoInsertConfig(ctx context.Context, cfg types.Config, up types.Upstream) (cfgID int64, err error) {
+	cfgID, success, err := mag.Neo.GetConfig(cfg)
+	if err != nil {
+		return
+	}
+	if !success {
+		cfgID, err = mag.Neo.CreateConfig(cfg, up)
+		if err != nil {
+			return
+		}
+	}
 	return
 }

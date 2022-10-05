@@ -2,6 +2,7 @@ package magazine
 
 import (
 	"context"
+	"errors"
 
 	"github.com/opencontainers/go-digest"
 	"github.com/sirupsen/logrus"
@@ -9,6 +10,31 @@ import (
 	ycfg "github.com/metahub-registry/metahub-admin/pkg/yaml/config"
 	"github.com/metahub-registry/metahub-api/pkg/types"
 )
+
+func (mag Magazine) GetManifest(ctx context.Context, m ycfg.Manifest) (mani types.Manifest, err error) {
+	up, err := m.ToUpstreamTriple()
+	if err != nil {
+		logrus.Error(err)
+		return
+	}
+	// The Manifest cached has a Data filed with the original data blob (matching the digest)
+	// in addition it has fields populated with the parsed data.
+	mani, isCached, err := mag.Minio.GetManifest(ctx, up)
+	if err != nil {
+		logrus.Error(err)
+		return
+	}
+	if !isCached {
+		err = errors.New("manifest is not cached")
+		return
+	}
+	mani.Upstream = types.Upstream{
+		Reg:  up.Reg,
+		Repo: up.Repo,
+		Tag:  up.Tag,
+	}
+	return
+}
 
 func (mag Magazine) CachManifest(ctx context.Context, m ycfg.Manifest) (mani types.Manifest, err error) {
 	up, err := m.ToUpstreamTriple()
@@ -31,7 +57,7 @@ func (mag Magazine) CachManifest(ctx context.Context, m ycfg.Manifest) (mani typ
 			return mani, err
 		}
 		// The blob 'b' is the original data blob (matching the digest), it contains refrerences to the config and layers
-		mani, err = types.NewManifestFromBytes(b)
+		mani, err = mag.Minio.NewManifestFromBytes(b)
 		if err != nil {
 			logrus.Error(err)
 			return mani, err
@@ -55,4 +81,34 @@ func (mag Magazine) CachManifest(ctx context.Context, m ycfg.Manifest) (mani typ
 		Tag:  up.Tag,
 	}
 	return
+}
+
+func (mag Magazine) NeoInsertManifest(ctx context.Context, m types.Manifest) (maniID int64, err error) {
+	maniID, success, err := mag.Neo.GetManifest(m)
+	if err != nil {
+		return
+	}
+	if !success {
+		maniID, err = mag.Neo.CreateManifest(m)
+		if err != nil {
+			return
+		}
+	}
+	return
+}
+
+func (mag Magazine) NeoLinkManifestToUpstream(ctx context.Context, maniID, upID int64) (err error) {
+	return mag.Neo.LinkManifestToUpstream(ctx, maniID, upID)
+}
+
+func (mag Magazine) NeoLinkManifestToConfig(ctx context.Context, maniID, cfgID int64) (err error) {
+	return mag.Neo.LinkManifestToConfig(ctx, maniID, cfgID)
+}
+
+func (mag Magazine) NeoLinkManifestToLayer(ctx context.Context, maniID, lID int64, idx int) (err error) {
+	return mag.Neo.LinkManifestToLayer(ctx, maniID, lID, idx)
+}
+
+func (mag Magazine) NeoLinkManifestToPlatform(ctx context.Context, maniID, platID int64) (err error) {
+	return mag.Neo.LinkManifestToPlatform(ctx, maniID, platID)
 }

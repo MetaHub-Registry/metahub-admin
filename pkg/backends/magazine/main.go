@@ -24,8 +24,12 @@ func NewMagazine(cmd *cobra.Command) (m Magazine, err error) {
 	if err != nil {
 		logrus.Fatal(err)
 	}
+	// GraphDB
+	neo, err := neo.New(cfgFile)
+	neo.Setup()
 	m = Magazine{
 		Minio: min,
+		Neo:   neo,
 	}
 
 	return

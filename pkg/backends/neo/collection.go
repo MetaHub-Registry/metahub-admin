@@ -1,11 +1,31 @@
 package neo
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/neo4j/neo4j-go-driver/v4/neo4j"
+	"github.com/sirupsen/logrus"
+	yamlCfg "github.com/metahub-registry/metahub-admin/pkg/yaml/config"
 	"github.com/metahub-registry/metahub-api/pkg/types"
 )
+
+func (n Neo) GetCollection(col yamlCfg.ManifestCollection) (colId int64, success bool, err error) {
+	q := `MATCH (c:Collection) WHERE c.repo = "%s" AND c.tag = "%s" RETURN id(c) AS collectionID`
+	query := fmt.Sprintf(q, col.Name, col.Tag)
+	session := n.neoDriver.NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeWrite})
+	defer session.Close()
+	result, err := session.Run(query, map[string]interface{}{})
+	if err != nil {
+		logrus.Errorf("Failed to run query: %s", err)
+		return
+	}
+	if result.Next() {
+		colId = result.Record().GetByIndex(0).(int64)
+		success = true
+	}
+	return
+}
 
 func (n Neo) GetAllCollections() (collections []types.Collection, err error) {
 	session := n.neoDriver.NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeWrite})
@@ -50,6 +70,28 @@ func (n Neo) GetAllCollections() (collections []types.Collection, err error) {
 	}
 	for _, c := range cols {
 		collections = append(collections, c)
+	}
+	return
+}
+
+func (n Neo) CreateCollection(col yamlCfg.ManifestCollection) (colId int64, err error) {
+	q := `CREATE (c:Collection {repo: "%s", tag: "%s", label: "%s"}) RETURN id(c) AS collectionID`
+	label := fmt.Sprintf("%s:%s", col.Name, col.Tag)
+	query := fmt.Sprintf(q, col.Name, col.Tag, label)
+	session := n.neoDriver.NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeWrite})
+	defer session.Close()
+	result, err := session.Run(query, map[string]interface{}{})
+	if err != nil {
+		logrus.Errorf("failed to create collection: %v", err)
+		return
+	}
+	if result.Next() {
+		v, ok := result.Record().Get("collectionID")
+		if !ok {
+			err = fmt.Errorf("failed to get collectionID")
+			return
+		}
+		colId = v.(int64)
 	}
 	return
 }
@@ -105,5 +147,19 @@ func ManifestListFromRecord(res neo4j.Result) (ml types.ManifestList, err error)
 	}
 	ml.Size = v.(int64)
 	ml.Manifests = make([]types.Manifest, 0)
+	return
+}
+
+func (n Neo) LinkCollectionToManifest(ctx context.Context, colID, maniID int64) (err error) {
+	q := `MATCH (c:Collection), (m:Manifest) WHERE id(c) = %d AND id(m) = %d`
+	q += ` MERGE (c)-[:UPSTREAM]->(m)`
+	query := fmt.Sprintf(q, colID, maniID)
+	session := n.neoDriver.NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeWrite})
+	defer session.Close()
+	_, err = session.Run(query, map[string]interface{}{})
+	if err != nil {
+		logrus.Errorf("failed to create link collection-manifest: %v", err)
+		return
+	}
 	return
 }

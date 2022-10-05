@@ -41,3 +41,17 @@ func (mag Magazine) CacheLayers(ctx context.Context, mani types.Manifest) (err e
 	}
 	return
 }
+
+func (mag Magazine) NeoInsertLayer(ctx context.Context, layer types.Layer) (layerID int64, err error) {
+	layerID, success, err := mag.Neo.GetLayer(layer)
+	if err != nil {
+		return
+	}
+	if !success {
+		layerID, err = mag.Neo.CreateLayer(layer)
+		if err != nil {
+			return
+		}
+	}
+	return
+}

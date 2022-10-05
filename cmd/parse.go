@@ -4,10 +4,7 @@ Copyright © 2022 NAME HERE <EMAIL ADDRESS>
 package cmd
 
 import (
-	"fmt"
-
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 	"github.com/metahub-registry/metahub-admin/pkg/config"
 )
 
@@ -32,7 +29,4 @@ func init() {
 
 func pCmd(cmd *cobra.Command, args []string) {
 	config.SetCommandValues(cmd)
-	fmt.Println("neoUrl: ", viper.Get("neo_url"))
-	neoUrl, _ := cmd.Flags().GetString("neo-url")
-	fmt.Println("neoUrl: ", neoUrl)
 }
