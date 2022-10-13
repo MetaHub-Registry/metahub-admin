@@ -6,6 +6,7 @@ import (
 
 	"github.com/opencontainers/go-digest"
 	"github.com/sirupsen/logrus"
+	"github.com/metahub-registry/metahub-admin/pkg/backends/minio"
 	"github.com/metahub-registry/metahub-admin/pkg/upstream"
 	ycfg "github.com/metahub-registry/metahub-admin/pkg/yaml/config"
 	"github.com/metahub-registry/metahub-api/pkg/types"
@@ -52,6 +53,23 @@ func (mag Magazine) CachManifest(ctx context.Context, m ycfg.Manifest) (mani typ
 	logrus.Infof("Caching manifest for %-101s -> %t", up.GetLabel(), isCached)
 	if !isCached {
 		b, blob, err := upstream.GetManifestByUpstreamTripleByTag(ctx, up)
+		if err != nil {
+			logrus.Error(err)
+			return mani, err
+		}
+		rawMani, err := minio.RawManifestFromBlob(b)
+		if err != nil {
+			logrus.Error(err)
+			return mani, err
+		}
+		up.Digest = rawMani.ConfigInfo().Digest
+		// We need to make sure that the config-blob is cached
+		cfgByte, cfgBlob, err := upstream.GetBlobByUpstreamTriple(ctx, up)
+		if err != nil {
+			logrus.Error(err)
+			return mani, err
+		}
+		err = mag.Minio.PutConfig(ctx, cfgByte, cfgBlob.Digest.String())
 		if err != nil {
 			logrus.Error(err)
 			return mani, err

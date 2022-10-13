@@ -8,6 +8,7 @@ import (
 
 	"github.com/docker/distribution"
 	"github.com/minio/minio-go/v7"
+	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/metahub-registry/metahub-admin/pkg/upstream"
 	"github.com/metahub-registry/metahub-api/pkg/types"
@@ -66,7 +67,8 @@ func (m Minio) ConfigGetBytes(ctx context.Context, path string) (b []byte, err e
 	defer obj.Close()
 	b, e := io.ReadAll(obj)
 	if e != nil {
-		logrus.Fatal(e)
+		err = errors.Wrap(e, "failed to read manifest")
+		logrus.Fatal(err)
 	}
 	return
 }

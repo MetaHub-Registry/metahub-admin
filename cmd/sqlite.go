@@ -30,7 +30,8 @@ func init() {
 	// Cobra supports Persistent Flags which will work for this command
 	// and all subcommands, e.g.:
 	//// SQLite
-	sqliteCmd.PersistentFlags().String("file", "./metahub.db", "The database file to use - will be overwritten")
+	sqliteCmd.PersistentFlags().String("mhsql-file", "./metahub.db", "The database file to use - will be overwritten")
+	sqliteCmd.PersistentFlags().String("usrsql-file", "./user.db", "The database file to use - will be overwritten")
 	//// Neo4j
 	sqliteCmd.PersistentFlags().String("neo-url", config.NeoURL, "NEO4j database url")
 	viper.BindPFlag("neo_url", rootCmd.Flags().Lookup("neo-url"))
@@ -49,10 +50,11 @@ func init() {
 func Cmd(cmd *cobra.Command, args []string) {
 	config.SetCommandValues(cmd)
 	cfgFile, _ := cmd.Flags().GetString("config")
-	dbFile, _ := cmd.Flags().GetString("file")
-	sq, err := sqlite.New(dbFile)
-	defer sq.Close()
+	mhSqlFile, _ := cmd.Flags().GetString("mhsql-file")
+	usrSqlFile, _ := cmd.Flags().GetString("usrsql-file")
+	sq, err := sqlite.New(mhSqlFile, usrSqlFile)
 	checkErr(err, "while sqlite.New")
+	defer sq.Close()
 	m, err := minio.NewMinio(cfgFile)
 	checkErr(err, "while NewMinio")
 	err = m.BucketCheck()

@@ -63,6 +63,7 @@ func pManiCmd(cmd *cobra.Command, args []string) {
 				logrus.Error(err)
 				continue
 			}
+			logrus.Infof("	- %s", mani.Config.Digest)
 			// Deal with ImageConfig
 			err = mag.CachImageConfig(ctx, &mani)
 			if err != nil {

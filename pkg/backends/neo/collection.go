@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/neo4j/neo4j-go-driver/v4/neo4j"
+	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	yamlCfg "github.com/metahub-registry/metahub-admin/pkg/yaml/config"
 	"github.com/metahub-registry/metahub-api/pkg/types"
@@ -140,12 +141,6 @@ func ManifestListFromRecord(res neo4j.Result) (ml types.ManifestList, err error)
 		return
 	}
 	ml.MediaType = v.(string)
-	v, ok = r.Get("manifestListSize")
-	if !ok {
-		err = fmt.Errorf("no manifestListSize found in record: %v", r)
-		return
-	}
-	ml.Size = v.(int64)
 	ml.Manifests = make([]types.Manifest, 0)
 	return
 }
@@ -160,6 +155,121 @@ func (n Neo) LinkCollectionToManifest(ctx context.Context, colID, maniID int64) 
 	if err != nil {
 		logrus.Errorf("failed to create link collection-manifest: %v", err)
 		return
+	}
+	return
+}
+
+func (n Neo) GetCollectionFilterPairs() (cfps []types.CollectionFilterPair, err error) {
+	session := n.neoDriver.NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeRead})
+	defer session.Close()
+	q := `MATCH (c:Collection)-[:UPSTREAM]-(Manifest)-[:IS]->(Platform)<-[:USES]-(f:Filter)`
+	q += ` RETURN DISTINCT id(c) AS collectionID, c.repo AS colRepo, c.tag AS colTag,`
+	q += ` id(f) AS filterID, f.label AS filterLabel`
+	//logrus.Infof("query: %s", q)
+	result, err := session.Run(q, map[string]interface{}{})
+	if err != nil {
+		logrus.Errorf("failed to get collection-filter pairs: %v", err)
+		return
+	}
+	type tupel struct {
+		collectionID int64
+		colRepo      string
+		colTag       string
+		filterID     int64
+		filterLabel  string
+	}
+	tupels := make([]tupel, 0)
+	for result.Next() {
+		t := tupel{}
+		r := result.Record()
+		v, ok := r.Get("collectionID")
+		if !ok {
+			err = fmt.Errorf("no collectionID found in record: %v", r)
+			return
+		}
+		t.collectionID = v.(int64)
+		v, ok = r.Get("colRepo")
+		if !ok {
+			err = fmt.Errorf("no colRepo found in record: %v", r)
+			return
+		}
+		t.colRepo = v.(string)
+		v, ok = r.Get("colTag")
+		if !ok {
+			err = fmt.Errorf("no colTag found in record: %v", r)
+			return
+		}
+		t.colTag = v.(string)
+		v, ok = r.Get("filterID")
+		if !ok {
+			err = fmt.Errorf("no filterID found in record: %v", r)
+			return
+		}
+		t.filterID = v.(int64)
+		v, ok = r.Get("filterLabel")
+		if !ok {
+			err = fmt.Errorf("no filterLabel found in record: %v", r)
+			return
+		}
+		t.filterLabel = v.(string)
+		tupels = append(tupels, t)
+	}
+	// Create CollectionFilterPairs
+	cfps = make([]types.CollectionFilterPair, 0)
+	for _, t := range tupels {
+		q := `MATCH (c:Collection)-[:UPSTREAM]-(m:Manifest)-[:IS]->(p:Platform)<-[:USES]-(f:Filter)`
+		q += ` MATCH (cfg:Config)<-[:USES]-(m)-[:UPSTREAM]->(u:Upstream)`
+		q += ` WHERE id(c) = %d AND id(f) = %d`
+		q += ` RETURN id(p) AS platformID, p.arch AS platformArch, p.os AS platformOS, p.variant AS platformVariant, p.features AS platformFeatures,`
+		q += ` id(m) AS manifestID, m.digest AS manifestDigest, m.mediaType AS manifestMediaType, m.size AS manifestSize,`
+		q += ` id(u) AS upstreamID, u.reg AS upstreamReg, u.repo AS upstreamRepo, u.tag AS upstreamTag,`
+		q += ` id(cfg) AS configID, cfg.digest AS configDigest, cfg.mediaType AS configMediaType, cfg.size AS configSize`
+		query := fmt.Sprintf(q, t.collectionID, t.filterID)
+		//logrus.Warnf("query: %s", query)
+		result, err := session.Run(query, map[string]interface{}{})
+		if err != nil {
+			logrus.Errorf("failed to get collection-filter pairs: %v", err)
+			return nil, err
+		}
+		cfp := types.CollectionFilterPair{
+			Collection: types.Collection{
+				NeoID: t.collectionID,
+				Repo:  t.colRepo,
+				Tag:   t.colTag,
+			},
+			Filter: types.Filter{
+				NeoID: t.filterID,
+				Label: t.filterLabel,
+			},
+			Manifests: make([]types.Manifest, 0),
+		}
+		for result.Next() {
+			p, e := PlatformFromRecord(result)
+			if e != nil {
+				err = errors.Wrap(e, "failed to get platform from record")
+				return cfps, err
+			}
+			c, e := ConfigFromRecord(result)
+			if e != nil {
+				err = errors.Wrap(e, "failed to get config from record")
+				return cfps, err
+			}
+			u, e := UpstreamFromRecord(result)
+			if e != nil {
+				err = errors.Wrap(e, "failed to get upstream from record")
+				return cfps, err
+			}
+			m, e := ManifestFromRecord(result)
+			if e != nil {
+				err = errors.Wrap(e, "failed to get manifest from record")
+				return cfps, err
+			}
+			m.Config = c
+			m.Platform = p
+			m.Upstream = u
+			cfp.Manifests = append(cfp.Manifests, m)
+		}
+		cfps = append(cfps, cfp)
 	}
 	return
 }

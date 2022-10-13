@@ -31,6 +31,7 @@ func (m Minio) GetManifest(ctx context.Context, up upstream.UpstreamTriple) (res
 	_, err = m.ManifestsStatObj(ctx, up.GetObjPath())
 	if err != nil {
 		if err.Error() == "The specified key does not exist." {
+			l.Warn("NOT CACHED -> return")
 			return res, false, nil
 		}
 		l.Error(err)
@@ -69,6 +70,20 @@ func (m Minio) PutManifest(ctx context.Context, b []byte, up upstream.UpstreamTr
 	if err != nil {
 		l.Error(err)
 		return err
+	}
+	return
+}
+
+func RawManifestFromBlob(b []byte) (mani manifest.Manifest, err error) {
+	l := logrus.WithFields(logrus.Fields{
+		"packrusage": "backend/minio/manifest.go",
+		"func":       "RawManifestFromBlob",
+	})
+	mt := manifest.GuessMIMEType(b)
+	mani, err = manifest.FromBlob(b, mt)
+	if err != nil {
+		err = errors.WithMessagef(err, "manifest.FromBlob %s", string(b))
+		l.Error(err)
 	}
 	return
 }
@@ -129,7 +144,7 @@ func (m Minio) ManifestGetObj(ctx context.Context, path string) (mani types.Mani
 	defer obj.Close()
 	b, e := io.ReadAll(obj)
 	if e != nil {
-		logrus.Fatal(e)
+		logrus.Error(e)
 	}
 	mani, err = m.NewManifestFromBytes(b)
 	if err != nil {

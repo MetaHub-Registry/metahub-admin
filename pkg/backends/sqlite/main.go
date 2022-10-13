@@ -2,61 +2,96 @@ package sqlite
 
 import (
 	"database/sql"
-	"time"
 
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/pkg/errors"
-	apiSqlite "github.com/metahub-registry/metahub-api/pkg/backends/sqlite"
 )
 
-var db *sql.DB
-
-const dbTimeout = time.Second * 3
+var dbMh *sql.DB
+var dbUsrMgmt *sql.DB
 
 type Sqlite struct {
 	// File is the path to the sqlite database file
-	File         string
-	Profile      apiSqlite.Profile
-	Config       apiSqlite.Config
-	Platform     apiSqlite.Platform
-	Filter       apiSqlite.Filter
-	Upstream     apiSqlite.Upstream
-	Manifest     apiSqlite.Manifest
-	Collection   apiSqlite.Collection
-	ManifestList apiSqlite.ManifestList
+	MhFile       string
+	UsrFile      string
+	Sql          *sql.DB
+	User         User
+	Token        Token
+	Profile      Profile
+	Config       Config
+	Platform     Platform
+	Filter       Filter
+	Upstream     Upstream
+	Manifest     Manifest
+	Collection   Collection
+	ManifestList ManifestList
 }
 
-func New(dbFile string) (s Sqlite, err error) {
+func NewUsrBackend(usrFile string) (s Sqlite, err error) {
+	return New("", usrFile)
+}
+
+func New(mhFile, usrFile string) (s Sqlite, err error) {
 	s = Sqlite{
-		File:         dbFile,
-		Config:       apiSqlite.Config{},
-		Profile:      apiSqlite.Profile{},
-		Filter:       apiSqlite.Filter{},
-		Platform:     apiSqlite.Platform{},
-		Upstream:     apiSqlite.Upstream{},
-		Manifest:     apiSqlite.Manifest{},
-		Collection:   apiSqlite.Collection{},
-		ManifestList: apiSqlite.ManifestList{},
+		MhFile:       mhFile,
+		UsrFile:      usrFile,
+		User:         User{},
+		Token:        Token{},
+		Config:       Config{},
+		Profile:      Profile{},
+		Filter:       Filter{},
+		Platform:     Platform{},
+		Upstream:     Upstream{},
+		Manifest:     Manifest{},
+		Collection:   Collection{},
+		ManifestList: ManifestList{},
 	}
-	s.createDB()
+	s.createDBs()
 	return
 }
 func (s Sqlite) Close() {
-	db.Close()
+	if s.MhFile != "" {
+		dbMh.Close()
+	}
+	dbUsrMgmt.Close()
 }
 
 func (s Sqlite) createViews() (err error) {
-	if err = s.Collection.CreateViews(); err != nil {
-		return
+	if s.MhFile != "" {
+		if err = s.Collection.CreateViews(); err != nil {
+			return
+		}
+		if err = s.Manifest.CreateViews(); err != nil {
+			return
+		}
 	}
-	if err = s.Manifest.CreateViews(); err != nil {
+	if s.UsrFile != "" {
 		return
 	}
 	return
 }
-func (s Sqlite) createDB() (err error) {
-	db, err = sql.Open("sqlite3", s.File)
-	checkErr(err, "while opening sqlite3")
+func (s *Sqlite) createDBs() (err error) {
+	if err := s.createUsrDB(); err != nil {
+		return err
+	}
+	if s.MhFile != "" {
+		err = s.createMhDB()
+	}
+	return
+}
+
+func (s *Sqlite) createUsrDB() (err error) {
+	dbMh, err = sql.Open("sqlite3", s.UsrFile)
+	checkErr(err, "while opening user-sqlite3")
+	// Create tables
+	err = s.User.CreateTables()
+	checkErr(err, "while creating user-tables")
+	return
+}
+
+func (s *Sqlite) createMhDB() (err error) {
+	dbMh, err = sql.Open("sqlite3", s.MhFile)
+	checkErr(err, "while opening metahub-sqlite3")
 	// Create tables
 	err = s.Profile.CreateTables()
 	checkErr(err, "")
