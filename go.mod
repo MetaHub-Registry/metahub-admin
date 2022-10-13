@@ -87,9 +87,3 @@ require (
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 )
-
-replace gitlab.com/qnib-golang/metahub => /Users/kniepbert/go/src/gitlab.com/qnib-golang/metahub
-
-replace github.com/metahub-registry/metahub-api => /Users/kniepbert/go/src/github.com/metahub-registry/metahub-api
-
-replace github.com/metahub-registry/metahub-api/pkg/backends/sqlite => /Users/kniepbert/go/src/github.com/metahub-registry/metahub-api/pkg/backends/sqlite
