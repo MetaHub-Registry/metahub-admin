@@ -82,18 +82,15 @@ func (n *Neo) Setup() (err error) {
 			attr: "digest",
 		},
 	}
-	logrus.Warn("SKIPPING create constraints")
 	for _, t := range nodes {
 		q := fmt.Sprintf(`CREATE CONSTRAINT constraint_node_%s IF NOT EXISTS FOR (p:%s) REQUIRE p.%s IS UNIQUE`, strings.ToLower(t.name), t.name, t.attr)
 		logrus.Debug(q)
 		_ = input
 		/// TODO: enable CREATE CONSTRAINT
-		/*
-			_, err = session.Run(q, input)
-			if err != nil {
-				logrus.Fatal(err.Error())
-			}
-		*/
+		_, err = session.Run(q, input)
+		if err != nil {
+			logrus.Fatal(err.Error())
+		}
 	}
 	logrus.Info("Neo4j Setup Done")
 	return

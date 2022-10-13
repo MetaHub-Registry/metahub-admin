@@ -12,6 +12,26 @@ import (
 	"github.com/metahub-registry/metahub-api/pkg/types"
 )
 
+func (mag Magazine) CacheImageConfigViaUpstream(ctx context.Context, up upstream.UpstreamTriple) (err error) {
+	l := logrus.WithFields(logrus.Fields{
+		"packrusage": "backend/magazine/config.go",
+		"func":       "CacheImageConfigViaUpstream",
+	})
+	b, blob, err := upstream.GetBlobByUpstreamTriple(ctx, up)
+	if err != nil {
+		err = errors.Wrapf(err, "failed to get blob for %s", up.GetLabel())
+		l.Error(err)
+		return err
+	}
+	_ = blob
+	err = mag.Minio.PutConfig(ctx, b, up.Digest.String())
+	if err != nil {
+		l.Error(err)
+		return err
+	}
+	return
+}
+
 func (mag Magazine) CachImageConfig(ctx context.Context, mani *types.Manifest) (err error) {
 	up := upstream.UpstreamTriple{
 		Reg:    mani.Upstream.Reg,
@@ -19,7 +39,6 @@ func (mag Magazine) CachImageConfig(ctx context.Context, mani *types.Manifest) (
 		Tag:    mani.Upstream.Tag,
 		Digest: digest.FromString(mani.Config.Digest),
 	}
-
 	cfg, isCached, err := mag.Minio.GetConfig(ctx, up, mani.Config)
 	_ = cfg
 	if err != nil {
@@ -28,7 +47,8 @@ func (mag Magazine) CachImageConfig(ctx context.Context, mani *types.Manifest) (
 	}
 	logrus.Infof("Caching config for %-103s -> %t", up.GetLabel(), isCached)
 	if !isCached {
-		b, blob, err := upstream.GetBlobByUpstreamTripleByDigest(ctx, up, mani.Config.Digest)
+		logrus.Warnf("Config not cached: %s", up.GetLabel())
+		b, blob, err := upstream.GetBlobByUpstreamTriple(ctx, up)
 		if err != nil {
 			err = errors.Wrapf(err, "failed to get blob for %s", up.GetLabel())
 			logrus.Error(err)
