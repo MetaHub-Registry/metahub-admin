@@ -3,6 +3,7 @@ module github.com/metahub-registry/metahub-admin
 go 1.19
 
 require (
+	github.com/chrispappas/golang-generics-set v1.0.1
 	github.com/containers/image/v5 v5.22.0
 	github.com/docker/distribution v2.8.1+incompatible
 	github.com/mattn/go-sqlite3 v1.14.15
@@ -22,6 +23,7 @@ require (
 	gitlab.com/qnib-golang/metahub v0.0.0-00010101000000-000000000000
 	github.com/metahub-registry/metahub-api v0.0.0-00010101000000-000000000000
 	go.opentelemetry.io/otel v1.10.0
+	golang.org/x/crypto v0.0.0-20220829220503-c86fa9a7ed90
 	gopkg.in/yaml.v3 v3.0.1
 )
 
@@ -29,7 +31,6 @@ require (
 	github.com/Azure/go-ansiterm v0.0.0-20210617225240-d185dfc1b5a1 // indirect
 	github.com/Microsoft/go-winio v0.5.2 // indirect
 	github.com/Microsoft/hcsshim v0.9.4 // indirect
-	github.com/TylerBrock/colorjson v0.0.0-20200706003622-8a50f05110d2 // indirect
 	github.com/cenkalti/backoff/v4 v4.1.3 // indirect
 	github.com/containerd/cgroups v1.0.4 // indirect
 	github.com/containerd/containerd v1.6.8 // indirect
@@ -41,7 +42,6 @@ require (
 	github.com/docker/go-units v0.4.0 // indirect
 	github.com/docker/libtrust v0.0.0-20160708172513-aabc10ec26b7 // indirect
 	github.com/dustin/go-humanize v1.0.0 // indirect
-	github.com/fatih/color v1.13.0 // indirect
 	github.com/fsnotify/fsnotify v1.5.4 // indirect
 	github.com/go-logr/logr v1.2.3 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
@@ -55,8 +55,6 @@ require (
 	github.com/klauspost/compress v1.15.9 // indirect
 	github.com/klauspost/cpuid/v2 v2.1.1 // indirect
 	github.com/magiconair/properties v1.8.6 // indirect
-	github.com/mattn/go-colorable v0.1.12 // indirect
-	github.com/mattn/go-isatty v0.0.14 // indirect
 	github.com/minio/md5-simd v1.1.2 // indirect
 	github.com/minio/sha256-simd v1.0.0 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
@@ -77,7 +75,6 @@ require (
 	github.com/subosito/gotenv v1.4.1 // indirect
 	go.opencensus.io v0.23.0 // indirect
 	go.opentelemetry.io/otel/trace v1.10.0 // indirect
-	golang.org/x/crypto v0.0.0-20220829220503-c86fa9a7ed90 // indirect
 	golang.org/x/net v0.0.0-20220826154423-83b083e8dc8b // indirect
 	golang.org/x/sys v0.0.0-20220825204002-c680a09ffe64 // indirect
 	golang.org/x/text v0.3.7 // indirect
@@ -87,3 +84,9 @@ require (
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 )
+
+replace gitlab.com/qnib-golang/metahub => /Users/kniepbert/go/src/gitlab.com/qnib-golang/metahub
+
+replace github.com/metahub-registry/metahub-api => /Users/kniepbert/go/src/github.com/metahub-registry/metahub-api
+
+replace github.com/metahub-registry/metahub-api/pkg/backends/sqlite => /Users/kniepbert/go/src/github.com/metahub-registry/metahub-api/pkg/backends/sqlite

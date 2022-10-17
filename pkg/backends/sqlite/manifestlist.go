@@ -31,7 +31,7 @@ func (ml ManifestList) CreateTables() (err error) {
 func (ml ManifestList) createManifestListXTable() (err error) {
 	tableName := "manifestlist_xtable"
 	q := fmt.Sprintf(`PRAGMA table_info(%s)`, tableName)
-	rows, err := dbMh.Query(q)
+	rows, err := db.Query(q)
 	if err != nil {
 		logrus.Fatal(err)
 	}
@@ -50,7 +50,7 @@ func (ml ManifestList) createManifestListXTable() (err error) {
 			REFERENCES manifestlist (id)
 		);`
 	stmt := fmt.Sprintf(s, tableName)
-	query, err := dbMh.Prepare(stmt)
+	query, err := db.Prepare(stmt)
 	if err != nil {
 		logrus.Fatal(err)
 	}
@@ -63,9 +63,9 @@ func (ml ManifestList) createManifestListXTable() (err error) {
 }
 
 func (ml ManifestList) createManifestlistTable() (err error) {
-	tableName := "manifestlist"
+	tableName := "manifestlists"
 	q := fmt.Sprintf(`PRAGMA table_info(%s)`, tableName)
-	rows, err := dbMh.Query(q)
+	rows, err := db.Query(q)
 	if err != nil {
 		logrus.Fatal(err)
 	}
@@ -81,7 +81,7 @@ func (ml ManifestList) createManifestlistTable() (err error) {
 		"size" INT
 		);`
 	stmt := fmt.Sprintf(s, tableName)
-	query, err := dbMh.Prepare(stmt)
+	query, err := db.Prepare(stmt)
 	if err != nil {
 		logrus.Fatal(err)
 	}
@@ -94,8 +94,8 @@ func (ml ManifestList) createManifestlistTable() (err error) {
 }
 
 func (ml ManifestList) Insert(i *types.ManifestList) (err error) {
-	q := `INSERT INTO manifestlist (digest, media_type) VALUES (?, ?)`
-	stmt, err := dbMh.Prepare(q)
+	q := `INSERT INTO manifestlists (digest, media_type) VALUES (?, ?)`
+	stmt, err := db.Prepare(q)
 	if err != nil {
 		logrus.Error(err)
 		return
@@ -108,8 +108,8 @@ func (ml ManifestList) Insert(i *types.ManifestList) (err error) {
 	i.SqlID, err = res.LastInsertId()
 	for _, m := range i.Manifests {
 		// Get SqlID of manifest
-		q := `SELECT id FROM manifest WHERE digest=?`
-		stmt, err = dbMh.Prepare(q)
+		q := `SELECT id FROM manifests WHERE digest=?`
+		stmt, err = db.Prepare(q)
 		if err != nil {
 			logrus.Error(err)
 			return err
@@ -122,7 +122,7 @@ func (ml ManifestList) Insert(i *types.ManifestList) (err error) {
 		}
 
 		q = `INSERT INTO manifestlist_xtable (manifest_id, manifestlist_id) VALUES (?, ?)`
-		stmt, err = dbMh.Prepare(q)
+		stmt, err = db.Prepare(q)
 		if err != nil {
 			logrus.Error(err)
 			return

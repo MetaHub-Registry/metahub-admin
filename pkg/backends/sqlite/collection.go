@@ -32,7 +32,7 @@ type colRes struct {
 
 func (c *Collection) GetAll() (cols []Collection, err error) {
 	q := `SELECT * FROM main.v_get_collections`
-	rows, err := dbMh.Query(q)
+	rows, err := db.Query(q)
 	if err != nil {
 		logrus.Error(err)
 	}
@@ -89,7 +89,7 @@ func (c *Collection) GetAll() (cols []Collection, err error) {
 
 func (c *Collection) GetCollectionByID(colID int64) (col Collection, err error) {
 	q := fmt.Sprintf(`SELECT * FROM main.v_get_collection WHERE colID = %d`, colID)
-	rows, err := dbMh.Query(q)
+	rows, err := db.Query(q)
 	if err != nil {
 		logrus.Error(err)
 	}
@@ -150,7 +150,7 @@ func (c *Collection) GetCollectionByID(colID int64) (col Collection, err error) 
 func (c *Collection) GetCollectionByRepo(repo string) (cols []Collection, err error) {
 	cols = []Collection{}
 	q := fmt.Sprintf(`SELECT * FROM main.v_get_collections WHERE colRepo LIKE '%s%%';`, repo)
-	rows, err := dbMh.Query(q)
+	rows, err := db.Query(q)
 	if err != nil {
 		logrus.Error(err)
 	}
@@ -212,81 +212,43 @@ func (c *Collection) CreateViews() (err error) {
 		logrus.Error(err)
 		return
 	}
-	err = c.CreateCollectionView()
-	if err != nil {
-		logrus.Error(err)
-		return
-	}
 	return
 }
 
 func (c *Collection) CreateCollectionsView() (err error) {
 	q := `CREATE VIEW IF NOT EXISTS v_get_collections AS
 	SELECT
-		collection.id AS colID,
-		collection.repo AS colRepo,
-		collection.tag AS colTag,
-		manifest.id AS maniID,
-		upstream.reg AS upstreamReg,
-		upstream.repo AS upstreamRepo,
-		upstream.tag AS upstreamTag
+		collections.id AS colID,
+		collections.repo AS colRepo,
+		collections.tag AS colTag,
+		manifests.id AS maniID,
+		upstreams.reg AS upstreamReg,
+		upstreams.repo AS upstreamRepo,
+		upstreams.tag AS upstreamTag,
+		platforms.os AS os,
+		platforms.arch AS arch,
+		platforms.variant AS variant,
+		platforms.features AS features,
+		profiles.name	 AS profile
 	FROM
-		collection
-		INNER JOIN collection_xtable ON collection.id = collection_xtable.collection_id
-		INNER JOIN manifestlist ON collection_xtable.manifestlist_id = manifestlist.id
-		INNER JOIN manifestlist_xtable ON manifestlist.id = manifestlist_xtable.manifestlist_id
-		INNER JOIN manifest ON manifestlist_xtable.manifest_id = manifest.id
-		INNER JOIN upstream ON manifest.upstream_id = upstream.id
-		INNER JOIN platform ON manifest.platform_id = platform.id
-		INNER JOIN platform_filter ON platform.id = platform_filter.platform_id
+		collections
+		INNER JOIN collection_xtable ON collections.id = collection_xtable.collection_id
+		INNER JOIN manifestlists ON collection_xtable.manifestlist_id = manifestlists.id
+		INNER JOIN manifestlist_xtable ON manifestlists.id = manifestlist_xtable.manifestlist_id
+		INNER JOIN manifests ON manifestlist_xtable.manifest_id = manifests.id
+		INNER JOIN upstreams ON manifests.upstream_id = upstreams.id
+		INNER JOIN platforms ON manifests.platform_id = platforms.id
+		INNER JOIN platform_filter ON platforms.id = platform_filter.platform_id
 		INNER JOIN profile_filter ON platform_filter.filter_id = profile_filter.filter_id
-		INNER JOIN profile ON profile.id = profile_filter.profile_id`
-	_, err = dbMh.Exec(q)
-	return
-}
-
-func (c *Collection) CreateCollectionView() (err error) {
-	q := `CREATE VIEW IF NOT EXISTS v_get_collection AS
-	SELECT
-		collection.id AS colID,
-		collection.repo AS colRepo,
-		collection.tag AS colTag,
-		manifest.id AS maniID,
-		upstream.reg AS upstreamReg,
-		upstream.repo AS upstreamRepo,
-		upstream.tag AS upstreamTag,
-		platform.os AS os,
-		platform.arch AS arch,
-		platform.variant AS variant,
-		platform.features AS features,
-		profile.name	 AS profile
-	FROM collection
-	INNER JOIN collection_xtable
-		ON collection.id = collection_xtable.collection_id
-	INNER JOIN manifestlist
-		ON collection_xtable.manifestlist_id = manifestlist.id
-	INNER JOIN manifestlist_xtable
-		ON manifestlist.id = manifestlist_xtable.manifestlist_id
-	INNER JOIN manifest
-		ON manifestlist_xtable.manifest_id = manifest.id
-	INNER JOIN upstream
-		ON manifest.upstream_id = upstream.id
-	INNER JOIN platform
-		ON manifest.platform_id = platform.id
-	INNER JOIN platform_filter
-		ON platform.id = platform_filter.platform_id
-	INNER JOIN profile_filter
-		ON platform_filter.filter_id = profile_filter.filter_id
-	INNER JOIN profile
-		ON profile.id = profile_filter.profile_id`
-	_, err = dbMh.Exec(q)
+		INNER JOIN profiles ON profiles.id = profile_filter.profile_id`
+	_, err = db.Exec(q)
 	return
 }
 
 func (c Collection) createCollectionTable() (err error) {
-	tableName := "collection"
+	tableName := "collections"
 	q := fmt.Sprintf(`PRAGMA table_info(%s)`, tableName)
-	rows, err := dbMh.Query(q)
+	rows, err := db.Query(q)
 	if err != nil {
 		logrus.Fatal(err)
 	}
@@ -301,7 +263,7 @@ func (c Collection) createCollectionTable() (err error) {
 		"tag" int
 		);`
 	stmt := fmt.Sprintf(s, tableName)
-	query, err := dbMh.Prepare(stmt)
+	query, err := db.Prepare(stmt)
 	if err != nil {
 		logrus.Fatal(err)
 	}
@@ -316,7 +278,7 @@ func (c Collection) createCollectionTable() (err error) {
 func (c Collection) createCollectionXTable() (err error) {
 	tableName := "collection_xtable"
 	q := fmt.Sprintf(`PRAGMA table_info(%s)`, tableName)
-	rows, err := dbMh.Query(q)
+	rows, err := db.Query(q)
 	if err != nil {
 		logrus.Fatal(err)
 	}
@@ -335,7 +297,7 @@ func (c Collection) createCollectionXTable() (err error) {
 			REFERENCES manifestlist (id)
 		);`
 	stmt := fmt.Sprintf(s, tableName)
-	query, err := dbMh.Prepare(stmt)
+	query, err := db.Prepare(stmt)
 	if err != nil {
 		logrus.Fatal(err)
 	}
@@ -360,8 +322,8 @@ func (c Collection) CreateTables() (err error) {
 }
 
 func (c Collection) Insert(i *types.Collection) (err error) {
-	q := `INSERT INTO collection (repo, tag) VALUES (?, ?)`
-	stmt, err := dbMh.Prepare(q)
+	q := `INSERT INTO collections (repo, tag) VALUES (?, ?)`
+	stmt, err := db.Prepare(q)
 	if err != nil {
 		logrus.Error(err)
 		return
@@ -377,7 +339,7 @@ func (c Collection) Insert(i *types.Collection) (err error) {
 
 func (c Collection) InsertXTable(colID, mlID int64) (err error) {
 	q := `INSERT INTO collection_xtable (collection_id, manifestlist_id) VALUES (?, ?)`
-	stmt, err := dbMh.Prepare(q)
+	stmt, err := db.Prepare(q)
 	if err != nil {
 		logrus.Error(err)
 		return

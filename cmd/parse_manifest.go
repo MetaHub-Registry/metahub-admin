@@ -48,7 +48,7 @@ func pManiCmd(cmd *cobra.Command, args []string) {
 		logrus.Error(err)
 	}
 
-	mag, err := magazine.NewMagazine(cmd)
+	mag, err := magazine.NewMagazine(cmd, MH_TABLES)
 	if err != nil {
 		logrus.Error(err)
 	}

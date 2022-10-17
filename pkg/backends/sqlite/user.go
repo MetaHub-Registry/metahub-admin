@@ -25,9 +25,10 @@ type User struct {
 }
 
 func (u User) CreateTables() (err error) {
+	logrus.Warn("CreateTables")
 	tableName := "users"
 	q := fmt.Sprintf(`PRAGMA table_info(%s)`, tableName)
-	rows, err := dbMh.Query(q)
+	rows, err := db.Query(q)
 	if err != nil {
 		logrus.Fatal(err)
 	}
@@ -48,7 +49,7 @@ func (u User) CreateTables() (err error) {
 		"updated_at" TIMESTAMP
 		);`
 	stmt := fmt.Sprintf(s, tableName)
-	query, err := dbMh.Prepare(stmt)
+	query, err := db.Prepare(stmt)
 	if err != nil {
 		logrus.Fatal(err)
 	}
@@ -68,7 +69,7 @@ func (u User) CreateViews() (err error) {
 
 func (s Sqlite) InsertUser(ctx context.Context, u types.User) (userID int64, err error) {
 	q := `INSERT INTO users (user_name, email, first_name, last_name, password_hash, user_active, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)`
-	stmt, err := dbMh.Prepare(q)
+	stmt, err := db.Prepare(q)
 	if err != nil {
 		logrus.Error(err)
 		return

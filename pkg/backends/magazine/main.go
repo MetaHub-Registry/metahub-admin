@@ -15,7 +15,7 @@ type Magazine struct {
 	SQlite sqlite.Sqlite
 }
 
-func NewMagazine(cmd *cobra.Command) (m Magazine, err error) {
+func NewMagazine(cmd *cobra.Command, tables string) (m Magazine, err error) {
 	cfgFile, _ := cmd.Flags().GetString("config")
 	min, err := minio.NewMinio(cfgFile)
 	if err != nil {
@@ -34,19 +34,18 @@ func NewMagazine(cmd *cobra.Command) (m Magazine, err error) {
 		logrus.Fatal(err)
 	}
 	neo.Setup()
-	// SQLite
-	usrSqlFile, _ := cmd.Flags().GetString("usrsql-file")
+	m = Magazine{
+		Minio: min,
+		Neo:   neo,
+	}
 
-	sqlite, err := sqlite.NewUsrBackend(usrSqlFile)
+	// SQLite
+	mhSqlFile, _ := cmd.Flags().GetString("metahub-db")
+	sqlite, err := sqlite.New(mhSqlFile, tables)
 	if err != nil {
 		err = errors.Wrapf(err, "failed to create sqlite backend")
 		logrus.Fatal(err)
 	}
-	m = Magazine{
-		Minio:  min,
-		Neo:    neo,
-		SQlite: sqlite,
-	}
-
+	m.SQlite = sqlite
 	return
 }

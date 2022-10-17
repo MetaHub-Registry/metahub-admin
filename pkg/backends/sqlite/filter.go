@@ -27,9 +27,9 @@ func (f Filter) CreateTables() (err error) {
 }
 
 func (f Filter) createFilterTable() (err error) {
-	tableName := "filter"
+	tableName := "filters"
 	q := fmt.Sprintf(`PRAGMA table_info(%s)`, tableName)
-	rows, err := dbMh.Query(q)
+	rows, err := db.Query(q)
 	if err != nil {
 		logrus.Fatal(err)
 	}
@@ -43,7 +43,7 @@ func (f Filter) createFilterTable() (err error) {
         "label" TEXT
         );`
 	stmt := fmt.Sprintf(s, tableName)
-	query, err := dbMh.Prepare(stmt)
+	query, err := db.Prepare(stmt)
 	if err != nil {
 		logrus.Fatal(err)
 	}
@@ -58,7 +58,7 @@ func (f Filter) createFilterTable() (err error) {
 func (f Filter) createProfileFilterXTable() (err error) {
 	tableName := "profile_filter"
 	q := fmt.Sprintf(`PRAGMA table_info(%s)`, tableName)
-	rows, err := dbMh.Query(q)
+	rows, err := db.Query(q)
 	if err != nil {
 		logrus.Fatal(err)
 	}
@@ -72,12 +72,12 @@ func (f Filter) createProfileFilterXTable() (err error) {
         "profile_id" INT,
 		"filter_id" INT,
 		FOREIGN KEY (filter_id)
-			REFERENCES filter (id)
+			REFERENCES filters (id)
 		FOREIGN KEY (profile_id)
-			REFERENCES profile (id)
+			REFERENCES profiles (id)
 		);`
 	stmt := fmt.Sprintf(s, tableName)
-	query, err := dbMh.Prepare(stmt)
+	query, err := db.Prepare(stmt)
 	if err != nil {
 		logrus.Fatal(err)
 	}
@@ -91,7 +91,7 @@ func (f Filter) createProfileFilterXTable() (err error) {
 
 func (f Filter) InsertFilter(fltr *types.Filter) (err error) {
 	// TODO: Do not insert if already exists?
-	stmt, err := dbMh.Prepare("INSERT INTO filter (label) VALUES (?) RETURNING id")
+	stmt, err := db.Prepare("INSERT INTO filters (label) VALUES (?) RETURNING id")
 	if err != nil {
 		logrus.Fatal(err)
 	}
@@ -105,7 +105,7 @@ func (f Filter) InsertFilter(fltr *types.Filter) (err error) {
 }
 
 func (f Filter) InsertProfileFilter(pfp types.ProfileFilterPlatform) (err error) {
-	stmt, err := dbMh.Prepare("INSERT INTO profile_filter (profile_id, filter_id) VALUES (?, ?)")
+	stmt, err := db.Prepare("INSERT INTO profile_filter (profile_id, filter_id) VALUES (?, ?)")
 	if err != nil {
 		logrus.Fatal(err)
 	}

@@ -15,9 +15,9 @@ type Upstream struct {
 }
 
 func (u Upstream) CreateTables() (err error) {
-	tableName := "upstream"
+	tableName := "upstreams"
 	q := fmt.Sprintf(`PRAGMA table_info(%s)`, tableName)
-	rows, err := dbMh.Query(q)
+	rows, err := db.Query(q)
 	if err != nil {
 		logrus.Fatal(err)
 	}
@@ -35,7 +35,7 @@ func (u Upstream) CreateTables() (err error) {
 		"tag" TEXT
 		);`
 	stmt := fmt.Sprintf(s, tableName)
-	query, err := dbMh.Prepare(stmt)
+	query, err := db.Prepare(stmt)
 	if err != nil {
 		logrus.Fatal(err)
 	}
@@ -48,8 +48,8 @@ func (u Upstream) CreateTables() (err error) {
 }
 
 func (u Upstream) Insert(i *types.Upstream) (err error) {
-	q := `INSERT INTO upstream (reg, repo, tag) VALUES (?, ?, ?)`
-	stmt, err := dbMh.Prepare(q)
+	q := `INSERT INTO upstreams (reg, repo, tag) VALUES (?, ?, ?)`
+	stmt, err := db.Prepare(q)
 	if err != nil {
 		logrus.Fatal(err)
 	}

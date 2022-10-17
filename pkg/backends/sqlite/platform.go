@@ -30,9 +30,9 @@ func (p Platform) CreateTables() (err error) {
 }
 
 func (p Platform) createPlatformTable() (err error) {
-	tableName := "platform"
+	tableName := "platforms"
 	q := fmt.Sprintf(`PRAGMA table_info(%s)`, tableName)
-	rows, err := dbMh.Query(q)
+	rows, err := db.Query(q)
 	if err != nil {
 		logrus.Fatal(err)
 	}
@@ -50,7 +50,7 @@ func (p Platform) createPlatformTable() (err error) {
         "features" TEXT
 		);`
 	stmt := fmt.Sprintf(s, tableName)
-	query, err := dbMh.Prepare(stmt)
+	query, err := db.Prepare(stmt)
 	if err != nil {
 		logrus.Fatal(err)
 	}
@@ -65,7 +65,7 @@ func (p Platform) createPlatformTable() (err error) {
 func (p Platform) createPlatformFilterXTable() (err error) {
 	tableName := "platform_filter"
 	q := fmt.Sprintf(`PRAGMA table_info(%s)`, tableName)
-	rows, err := dbMh.Query(q)
+	rows, err := db.Query(q)
 	if err != nil {
 		logrus.Fatal(err)
 	}
@@ -84,7 +84,7 @@ func (p Platform) createPlatformFilterXTable() (err error) {
 			REFERENCES platform (id)
 		);`
 	stmt := fmt.Sprintf(s, tableName)
-	query, err := dbMh.Prepare(stmt)
+	query, err := db.Prepare(stmt)
 	if err != nil {
 		logrus.Fatal(err)
 	}
@@ -97,8 +97,8 @@ func (p Platform) createPlatformFilterXTable() (err error) {
 }
 
 func (p Platform) Insert(i *types.Platform) (err error) {
-	q := `INSERT INTO platform (os, arch, variant, features) VALUES (?, ?, ?, ?)`
-	stmt, err := dbMh.Prepare(q)
+	q := `INSERT INTO platforms (os, arch, variant, features) VALUES (?, ?, ?, ?)`
+	stmt, err := db.Prepare(q)
 	if err != nil {
 		logrus.Fatal(err)
 	}
@@ -112,8 +112,8 @@ func (p Platform) Insert(i *types.Platform) (err error) {
 
 func (p Platform) Upsert(i *types.Platform) (err error) {
 	// Already exists?
-	q := `SELECT id FROM platform WHERE os=? AND arch=? AND variant=? AND features=?`
-	stmt, err := dbMh.Prepare(q)
+	q := `SELECT id FROM platforms WHERE os=? AND arch=? AND variant=? AND features=?`
+	stmt, err := db.Prepare(q)
 	if err != nil {
 		logrus.Fatal(err)
 	}
@@ -145,7 +145,7 @@ func (p Platform) InsertPlatformFilter(pfp types.ProfileFilterPlatform) (err err
 		logrus.Fatal("Filter.SqlID is 0")
 	}
 
-	stmt, err := dbMh.Prepare("INSERT INTO platform_filter (platform_id, filter_id) VALUES (?, ?)")
+	stmt, err := db.Prepare("INSERT INTO platform_filter (platform_id, filter_id) VALUES (?, ?)")
 	if err != nil {
 		logrus.Fatal(err)
 	}

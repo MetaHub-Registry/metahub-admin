@@ -27,7 +27,7 @@ func init() {
 	// Cobra supports Persistent Flags which will work for this command
 	// and all subcommands, e.g.:
 	// parseCmd.PersistentFlags().String("foo", "", "A help for foo")
-
+	parseUsersCmd.Flags().String("metahub-db", "", "The metahub database file to use - will be overwritten")
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
 	// parseCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
@@ -50,7 +50,7 @@ func uParseCmd(cmd *cobra.Command, args []string) {
 		logrus.Error(err)
 	}
 
-	mag, err := magazine.NewMagazine(cmd)
+	mag, err := magazine.NewMagazine(cmd, USR_TABLES)
 	if err != nil {
 		logrus.Error(err)
 	}
