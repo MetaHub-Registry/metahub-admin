@@ -51,7 +51,7 @@ func pParseCmd(cmd *cobra.Command, args []string) {
 		logrus.Error(err)
 	}
 
-	mag, err := magazine.NewMagazine(cmd)
+	mag, err := magazine.NewMagazine(cmd, NONE)
 	if err != nil {
 		logrus.Error(err)
 	}

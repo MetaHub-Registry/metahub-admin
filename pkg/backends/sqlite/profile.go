@@ -17,9 +17,9 @@ func (p Profile) CreateTables() (err error) {
 }
 
 func (p Profile) createTable() (err error) {
-	tableName := "profile"
+	tableName := "profiles"
 	q := fmt.Sprintf(`PRAGMA table_info(%s)`, tableName)
-	rows, err := dbMh.Query(q)
+	rows, err := db.Query(q)
 	if err != nil {
 		logrus.Fatal(err)
 	}
@@ -33,7 +33,7 @@ func (p Profile) createTable() (err error) {
         "name" TEXT NOT NULL UNIQUE
 		);`
 	stmt := fmt.Sprintf(q, tableName)
-	query, err := dbMh.Prepare(stmt)
+	query, err := db.Prepare(stmt)
 	if err != nil {
 		logrus.Fatal(err)
 	}
@@ -46,8 +46,8 @@ func (p Profile) createTable() (err error) {
 }
 
 func (p Profile) HasProfile(name string) (profileID int64, err error) {
-	q := `SELECT id FROM profile WHERE name = ?`
-	stmt, err := dbMh.Prepare(q)
+	q := `SELECT id FROM profiles WHERE name = ?`
+	stmt, err := db.Prepare(q)
 	if err != nil {
 		logrus.Error(err)
 		return
@@ -69,7 +69,7 @@ func (p Profile) HasProfile(name string) (profileID int64, err error) {
 
 func (p Profile) Insert(prf *types.Profile) (err error) {
 	// TODO: Do not insert if already exists?
-	stmt, err := dbMh.Prepare("INSERT INTO profile (name) VALUES (?) RETURNING id")
+	stmt, err := db.Prepare("INSERT INTO profiles (name) VALUES (?) RETURNING id")
 	if err != nil {
 		logrus.Fatal(err)
 	}

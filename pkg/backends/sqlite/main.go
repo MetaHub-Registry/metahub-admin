@@ -2,13 +2,15 @@ package sqlite
 
 import (
 	"database/sql"
+	"strings"
 
+	"github.com/chrispappas/golang-generics-set/set"
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
 )
 
-var dbMh *sql.DB
-var dbUsrMgmt *sql.DB
+var db *sql.DB
 
 type Sqlite struct {
 	// File is the path to the sqlite database file
@@ -27,14 +29,8 @@ type Sqlite struct {
 	ManifestList ManifestList
 }
 
-func NewUsrBackend(usrFile string) (s Sqlite, err error) {
-	return New("", usrFile)
-}
-
-func New(mhFile, usrFile string) (s Sqlite, err error) {
+func New(mhFile string, tables string) (s Sqlite, err error) {
 	s = Sqlite{
-		MhFile:       mhFile,
-		UsrFile:      usrFile,
 		User:         User{},
 		Token:        Token{},
 		Config:       Config{},
@@ -46,69 +42,98 @@ func New(mhFile, usrFile string) (s Sqlite, err error) {
 		Collection:   Collection{},
 		ManifestList: ManifestList{},
 	}
-	s.createDBs()
+	err = s.createDB(mhFile, tables)
+	if err != nil {
+		return s, err
+	}
+	err = s.createViews(tables)
+	if err != nil {
+		return s, err
+	}
 	return
 }
 func (s Sqlite) Close() {
-	if s.MhFile != "" {
-		dbMh.Close()
-	}
-	dbUsrMgmt.Close()
+	db.Close()
+
 }
 
-func (s Sqlite) createViews() (err error) {
-	if s.MhFile != "" {
+func (s Sqlite) createViews(tables string) (err error) {
+	if tables == "none" {
+		return
+	}
+	logrus.Info(">> Create sqlite3 views")
+	tbls := []string{}
+	for _, ele := range strings.Split(tables, ",") {
+		if ele != "" {
+			tbls = append(tbls, ele)
+		}
+	}
+	t := set.FromSlice(tbls)
+	if len(tables) == 0 || t.Has("collections") {
 		if err = s.Collection.CreateViews(); err != nil {
 			return
 		}
+	}
+	if len(tables) == 0 || t.Has("manifests") {
 		if err = s.Manifest.CreateViews(); err != nil {
 			return
 		}
 	}
-	if s.UsrFile != "" {
+	return
+}
+
+func (s *Sqlite) createDB(mhFile string, tables string) (err error) {
+	if tables == "none" {
 		return
 	}
-	return
-}
-func (s *Sqlite) createDBs() (err error) {
-	if err := s.createUsrDB(); err != nil {
-		return err
-	}
-	if s.MhFile != "" {
-		err = s.createMhDB()
-	}
-	return
-}
-
-func (s *Sqlite) createUsrDB() (err error) {
-	dbMh, err = sql.Open("sqlite3", s.UsrFile)
+	logrus.Info(">> Create User databases")
+	db, err = sql.Open("sqlite3", mhFile)
 	checkErr(err, "while opening user-sqlite3")
+	tbls := []string{}
+	for _, ele := range strings.Split(tables, ",") {
+		if ele != "" {
+			tbls = append(tbls, ele)
+		}
+	}
+	t := set.FromSlice(tbls)
 	// Create tables
-	err = s.User.CreateTables()
-	checkErr(err, "while creating user-tables")
-	return
-}
+	if len(tables) == 0 || t.Has("users") {
+		err = s.User.CreateTables()
+		checkErr(err, "while creating user-tables")
+	}
+	if len(tables) == 0 || t.Has("profiles") {
+		err = s.Profile.CreateTables()
+		checkErr(err, "")
+	}
+	if len(tables) == 0 || t.Has("filters") {
+		err = s.Filter.CreateTables()
+		checkErr(err, "")
+	}
+	if len(tables) == 0 || t.Has("profiles") {
 
-func (s *Sqlite) createMhDB() (err error) {
-	dbMh, err = sql.Open("sqlite3", s.MhFile)
-	checkErr(err, "while opening metahub-sqlite3")
-	// Create tables
-	err = s.Profile.CreateTables()
-	checkErr(err, "")
-	err = s.Filter.CreateTables()
-	checkErr(err, "")
-	err = s.Platform.CreateTables()
-	checkErr(err, "")
-	err = s.Config.CreateTables()
-	checkErr(err, "")
-	err = s.Upstream.CreateTables()
-	checkErr(err, "")
-	err = s.Manifest.CreateTables()
-	checkErr(err, "")
-	err = s.Collection.CreateTables()
-	checkErr(err, "")
-	err = s.ManifestList.CreateTables()
-	checkErr(err, "")
+		err = s.Platform.CreateTables()
+		checkErr(err, "")
+	}
+	if len(tables) == 0 || t.Has("configs") {
+		err = s.Config.CreateTables()
+		checkErr(err, "")
+	}
+	if len(tables) == 0 || t.Has("upstreams") {
+		err = s.Upstream.CreateTables()
+		checkErr(err, "")
+	}
+	if len(tables) == 0 || t.Has("manifests") {
+		err = s.Manifest.CreateTables()
+		checkErr(err, "")
+	}
+	if len(tables) == 0 || t.Has("collections") {
+		err = s.Collection.CreateTables()
+		checkErr(err, "")
+	}
+	if len(tables) == 0 || t.Has("manifestlists") {
+		err = s.ManifestList.CreateTables()
+		checkErr(err, "")
+	}
 	return
 }
 

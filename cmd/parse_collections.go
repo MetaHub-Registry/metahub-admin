@@ -53,7 +53,7 @@ func pCollectonCmd(cmd *cobra.Command, args []string) {
 		l.Error(err)
 	}
 
-	mag, err := magazine.NewMagazine(cmd)
+	mag, err := magazine.NewMagazine(cmd, MH_TABLES)
 	if err != nil {
 		l.Error(err)
 	}

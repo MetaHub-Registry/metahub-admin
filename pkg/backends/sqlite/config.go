@@ -16,9 +16,9 @@ type Config struct {
 }
 
 func (c Config) CreateTables() (err error) {
-	tableName := "config"
+	tableName := "configs"
 	q := fmt.Sprintf(`PRAGMA table_info(%s)`, tableName)
-	rows, err := dbMh.Query(q)
+	rows, err := db.Query(q)
 	if err != nil {
 		logrus.Fatal(err)
 	}
@@ -34,7 +34,7 @@ func (c Config) CreateTables() (err error) {
         "media_type" TEXT,
         "size" INT);`
 	stmt := fmt.Sprintf(s, tableName)
-	query, err := dbMh.Prepare(stmt)
+	query, err := db.Prepare(stmt)
 	if err != nil {
 		logrus.Fatal(err)
 	}
@@ -47,8 +47,8 @@ func (c Config) CreateTables() (err error) {
 }
 
 func (c Config) Insert(i *types.Config) (err error) {
-	q := `INSERT INTO config (digest, label, media_type, size) VALUES (?, ?, ?, ?)`
-	stmt, err := dbMh.Prepare(q)
+	q := `INSERT INTO configs (digest, label, media_type, size) VALUES (?, ?, ?, ?)`
+	stmt, err := db.Prepare(q)
 	if err != nil {
 		logrus.Error(err)
 		return

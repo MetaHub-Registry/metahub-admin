@@ -23,6 +23,12 @@ var sqliteCmd = &cobra.Command{
 	Run:   Cmd,
 }
 
+const (
+	MH_TABLES  = "collections,configs,filters,manifests,manifestlists,platforms,profiles,upstreams"
+	USR_TABLES = "users,tokens"
+	NONE       = "none"
+)
+
 func init() {
 	rootCmd.AddCommand(sqliteCmd)
 
@@ -30,8 +36,7 @@ func init() {
 	// Cobra supports Persistent Flags which will work for this command
 	// and all subcommands, e.g.:
 	//// SQLite
-	sqliteCmd.PersistentFlags().String("mhsql-file", "./metahub.db", "The database file to use - will be overwritten")
-	sqliteCmd.PersistentFlags().String("usrsql-file", "./user.db", "The database file to use - will be overwritten")
+	sqliteCmd.PersistentFlags().String("metahub-db", "", "The database file to use - will be overwritten")
 	//// Neo4j
 	sqliteCmd.PersistentFlags().String("neo-url", config.NeoURL, "NEO4j database url")
 	viper.BindPFlag("neo_url", rootCmd.Flags().Lookup("neo-url"))
@@ -50,9 +55,8 @@ func init() {
 func Cmd(cmd *cobra.Command, args []string) {
 	config.SetCommandValues(cmd)
 	cfgFile, _ := cmd.Flags().GetString("config")
-	mhSqlFile, _ := cmd.Flags().GetString("mhsql-file")
-	usrSqlFile, _ := cmd.Flags().GetString("usrsql-file")
-	sq, err := sqlite.New(mhSqlFile, usrSqlFile)
+	mhSqlFile, _ := cmd.Flags().GetString("metahub-db")
+	sq, err := sqlite.New(mhSqlFile, "")
 	checkErr(err, "while sqlite.New")
 	defer sq.Close()
 	m, err := minio.NewMinio(cfgFile)
