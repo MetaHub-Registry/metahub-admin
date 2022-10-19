@@ -32,15 +32,15 @@ echo " CE ready in ${YAMLPATH}"
 
 set -xe
 ## Minio Ops
-metahub-admin parse --config /go/metahub-admin/misc/config/compose-config.yaml manifests --remove-manifests-alias  $YAMLPATH/manifests
+metahub-admin parse --config ./misc/config/compose-config.yaml manifests --remove-manifests-alias  $YAMLPATH/manifests
 
 ## Neo4j Ops
-metahub-admin parse --config /go/metahub-admin/misc/config/compose-config.yaml profiles  --empty-graph $YAMLPATH/profiles
-metahub-admin parse --config /go/metahub-admin/misc/config/compose-config.yaml collections $YAMLPATH/manifests
-metahub-admin --config /go/metahub-admin/misc/config/compose-config.yaml compute manifestlists
+metahub-admin parse --config ./misc/config/compose-config.yaml profiles  --empty-graph $YAMLPATH/profiles
+metahub-admin parse --config ./misc/config/compose-config.yaml collections $YAMLPATH/manifests
+metahub-admin --config ./misc/config/compose-config.yaml compute manifestlists
 
 echo "#### Create SQLite DB"
-DBFILE=/go/metahub-admin/metahub.db
-cp -r /go/metahub-admin/misc/yaml/users /opt/community-edition/
-metahub-admin --config /go/metahub-admin/misc/config/compose-config.yaml parse users --metahub-db=${DBFILE} $YAMLPATH/users
-metahub-admin --config /go/metahub-admin/misc/config/compose-config.yaml sqlite --metahub-db=${DBFILE}
+DBFILE=./metahub.db
+cp -r ./misc/yaml/users /opt/community-edition/
+metahub-admin --config ./misc/config/compose-config.yaml parse users --metahub-db=${DBFILE} $YAMLPATH/users
+metahub-admin --config ./misc/config/compose-config.yaml sqlite --metahub-db=${DBFILE}

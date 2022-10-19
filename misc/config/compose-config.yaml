@@ -1,5 +1,5 @@
 minio:
-  url: minio:9000
+  url: portainer.fritz.box:9000
   region: us-east-1
   user: minio
   password: miniominio
@@ -9,4 +9,4 @@ neo4j:
   dbname: neo4j
   user: neo4j
   password: test
-  url: bolt://neo4j:7687
+  url: bolt://portainer.fritz.box:7687
