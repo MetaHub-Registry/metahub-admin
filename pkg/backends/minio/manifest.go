@@ -163,7 +163,6 @@ func (m Minio) RemoveManifestAliases() (err error) {
 			l.Error(err)
 			continue
 		}
-		fmt.Println(object.Key)
 	}
 	return
 }
