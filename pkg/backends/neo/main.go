@@ -95,3 +95,17 @@ func (n *Neo) Setup() (err error) {
 	logrus.Info("Neo4j Setup Done")
 	return
 }
+
+func (n Neo) EmptyGraph() (err error) {
+	logrus.Warn("Neo.EmptyGraph")
+	session := n.neoDriver.NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeWrite})
+	if err != nil {
+		logrus.Errorf("Error creating neo session: %s\n", err)
+		return
+	}
+	defer session.Close()
+	input := map[string]interface{}{}
+	q := `MATCH (n) DETACH DELETE n`
+	_, err = session.Run(q, input)
+	return
+}
