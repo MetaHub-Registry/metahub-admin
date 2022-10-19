@@ -24,7 +24,7 @@ var sqliteCmd = &cobra.Command{
 }
 
 const (
-	MH_TABLES  = "collections,configs,filters,manifests,manifestlists,platforms,profiles,upstreams"
+	MH_TABLES  = "collections,configs,filters,layers,manifests,manifestlists,platforms,profiles,upstreams"
 	USR_TABLES = "users,tokens"
 	NONE       = "none"
 )

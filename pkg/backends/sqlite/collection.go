@@ -222,6 +222,7 @@ func (c *Collection) CreateCollectionsView() (err error) {
 		collections.repo AS colRepo,
 		collections.tag AS colTag,
 		manifests.id AS maniID,
+		manifestlists.digest AS manifestlistDigest,
 		upstreams.reg AS upstreamReg,
 		upstreams.repo AS upstreamRepo,
 		upstreams.tag AS upstreamTag,

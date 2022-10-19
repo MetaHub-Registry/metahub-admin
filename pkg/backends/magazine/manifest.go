@@ -102,6 +102,9 @@ func (mag Magazine) CachManifest(ctx context.Context, m ycfg.Manifest) (mani typ
 }
 
 func (mag Magazine) NeoInsertManifest(ctx context.Context, m types.Manifest) (maniID int64, err error) {
+	if m.Digest == m.Config.Digest {
+		logrus.Fatalf("NeoInsertManifest: Manifest.Digest and Manifest.Config.Digest are equal - something went wrong\n Digest:    %s\n ConfigDig: %s ", m.Digest, m.Config.Digest)
+	}
 	maniID, success, err := mag.Neo.GetManifest(m)
 	if err != nil {
 		return

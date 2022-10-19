@@ -7,6 +7,7 @@ import (
 
 	"github.com/containers/image/v5/manifest"
 	"github.com/minio/minio-go/v7"
+	"github.com/opencontainers/go-digest"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/metahub-registry/metahub-admin/pkg/upstream"
@@ -100,9 +101,11 @@ func (m Minio) NewManifestFromBytes(b []byte) (mani types.Manifest, err error) {
 		l.Error(err)
 	}
 	bInfo := cntMani.ConfigInfo()
+	// TODO: Is deriving digest from byte safe?
+	maniDig := digest.FromBytes(b)
 	mani = types.Manifest{
 		MediaType: mt,
-		Digest:    bInfo.Digest.String(),
+		Digest:    maniDig.String(),
 		Size:      bInfo.Size,
 	}
 	imgInfo, err := cntMani.Inspect(m.configGetter)
@@ -134,6 +137,7 @@ func (m Minio) ManifestGetObj(ctx context.Context, path string) (mani types.Mani
 	l := logrus.WithFields(logrus.Fields{
 		"packrusage": "backend/minio/manifest.go",
 		"func":       "ManifestGetObj",
+		"path":       path,
 	})
 	cli := m.BucketConfig[manifestsBucket].Client
 	obj, err := cli.GetObject(ctx, manifestsBucket, path, minio.GetObjectOptions{})
@@ -151,6 +155,7 @@ func (m Minio) ManifestGetObj(ctx context.Context, path string) (mani types.Mani
 		err = errors.Wrapf(err, "m.NewManifestFromBytes")
 		l.Error(err)
 	}
+	l.Warnf("mani: %+v", mani.Config)
 	return
 }
 
@@ -158,6 +163,7 @@ func (m Minio) GetManifestViaPath(ctx context.Context, path string) (mani types.
 	l := logrus.WithFields(logrus.Fields{
 		"packrusage": "backend/minio/manifest.go",
 		"func":       "GetManifestViaPath",
+		"path":       path,
 	})
 	cli := m.BucketConfig[manifestsBucket].Client
 	obj, err := cli.GetObject(ctx, manifestsBucket, path, minio.GetObjectOptions{})
@@ -176,5 +182,6 @@ func (m Minio) GetManifestViaPath(ctx context.Context, path string) (mani types.
 		l.Error(err)
 		return
 	}
+	l.Warnf("ManifestDigest: %s", up.Digest.String())
 	return m.ManifestGetObj(ctx, up.Digest.String())
 }
