@@ -30,9 +30,9 @@ while [ ! -f "${YAMLPATH}/.done" ]; do
 done
 echo " CE ready in ${YAMLPATH}"
 
-set -x
+set -xe
 ## Minio Ops
-metahub-admin parse --config /go/metahub-admin/misc/config/compose-config.yaml manifests --empty-configs --empty-manifests $YAMLPATH/manifests
+metahub-admin parse --config /go/metahub-admin/misc/config/compose-config.yaml manifests --remove-manifests-alias  $YAMLPATH/manifests
 
 ## Neo4j Ops
 metahub-admin parse --config /go/metahub-admin/misc/config/compose-config.yaml profiles  --empty-graph $YAMLPATH/profiles
@@ -41,5 +41,6 @@ metahub-admin --config /go/metahub-admin/misc/config/compose-config.yaml compute
 
 echo "#### Create SQLite DB"
 DBFILE=/go/metahub-admin/metahub.db
-metahub-admin --config /go/metahub-admin/misc/config/compose-config.yaml parse users --metahub-db=${DBFILE} $YAMLPATH/misc/yaml/users
+cp -r /go/metahub-admin/misc/yaml/users /opt/community-edition/
+metahub-admin --config /go/metahub-admin/misc/config/compose-config.yaml parse users --metahub-db=${DBFILE} $YAMLPATH/users
 metahub-admin --config /go/metahub-admin/misc/config/compose-config.yaml sqlite --metahub-db=${DBFILE}
