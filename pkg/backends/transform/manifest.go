@@ -47,8 +47,20 @@ func (t Transformer) ManifestToSqlite() (err error) {
 			logrus.Error(err)
 			continue
 		}
+		/// 2. fetch all layers for manifest
+		layers, err := t.Neo.GetLayersForManifest(m)
+		if err != nil {
+			logrus.Error(err)
+			continue
+		}
+		for _, l := range layers {
+			// 2.a insert layer into SQLite
+			err = t.SQlite.Layer.Upsert(&l)
+			if err != nil {
+				logrus.Error(err)
+				continue
+			}
+		}
 	}
-	/// 2. fetch all layers for manifest
-	// 2.a insert layer into SQLite
 	return
 }

@@ -21,6 +21,7 @@ type Sqlite struct {
 	Token        Token
 	Profile      Profile
 	Config       Config
+	Layer        Layer
 	Platform     Platform
 	Filter       Filter
 	Upstream     Upstream
@@ -38,6 +39,7 @@ func New(mhFile string, tables string) (s Sqlite, err error) {
 		Filter:       Filter{},
 		Platform:     Platform{},
 		Upstream:     Upstream{},
+		Layer:        Layer{},
 		Manifest:     Manifest{},
 		Collection:   Collection{},
 		ManifestList: ManifestList{},
@@ -79,6 +81,11 @@ func (s Sqlite) createViews(tables string) (err error) {
 			return
 		}
 	}
+	if len(tables) == 0 || t.Has("manifestlists") {
+		if err = s.ManifestList.CreateViews(); err != nil {
+			return
+		}
+	}
 	return
 }
 
@@ -116,6 +123,10 @@ func (s *Sqlite) createDB(mhFile string, tables string) (err error) {
 	}
 	if len(tables) == 0 || t.Has("configs") {
 		err = s.Config.CreateTables()
+		checkErr(err, "")
+	}
+	if len(tables) == 0 || t.Has("layers") {
+		err = s.Layer.CreateTables()
 		checkErr(err, "")
 	}
 	if len(tables) == 0 || t.Has("upstreams") {

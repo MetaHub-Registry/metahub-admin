@@ -107,6 +107,8 @@ func (m Manifest) CreateManifestView() (err error) {
 		collections.id AS colID,
 		manifests.id AS maniID,
 		manifests.digest AS maniDigest,
+		manifestlists.digest AS maniListDigest,
+		manifestlists.id AS maniListID,
 		upstreams.reg AS upstreamReg,
 		upstreams.repo AS upstreamRepo,
 		upstreams.tag AS upstreamTag,
@@ -115,6 +117,7 @@ func (m Manifest) CreateManifestView() (err error) {
 		platforms.variant AS variant,
 		platforms.features AS features,
 		configs.digest AS configDigest,
+		configs.id AS configID,
 		configs.media_type AS configMediaType,
 		configs.size AS configSize,
 		profiles.name AS profile

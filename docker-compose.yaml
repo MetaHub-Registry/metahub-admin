@@ -1,25 +1,28 @@
 version: '3.9'
 services:
-  minio:
-    image: quay.io/minio/minio
-    ports:
-      - 9000:9000
-      - 9001:9001
+  data:
+    image: alpine:3.16
     volumes:
-      - minio:/minio
-    environment:
-      MINIO_ROOT_USER: "minio"
-      MINIO_ROOT_PASSWORD: "miniominio"
-    command: ["server", "/data", "--console-address=0.0.0.0:9001"]
-  neo4j:
-    image: neo4j:4.4.9
-    ports:
-      - 7474:7474
-      - 7687:7687
-    environment:
-      NEO4J_AUTH: neo4j/test
+      - ce_data:/opt/community-edition
+      - ./misc/demo:/go/metahub/misc/demo
+    networks:
+     - mh-internal
+    command: [/go/metahub/misc/bin/ce-fetch.ash, /opt/community-edition]
+  admin:
+    image: 193198941246.dkr.ecr.eu-west-1.amazonaws.com/qnib-golang/metahub-admin:v0.1.0
+    networks:
+     - mh-internal
+     - mh-data
     volumes:
-     - neo4j:/data
+      - .:/go/metahub-admin
+      - ce_data:/opt/community-edition
+      - /var/lib/metahub/
+    working_dir: /var/lib/metahub/
+    command: ["sleep", "inf"]    
+networks:
+  mh-internal:
+  mh-data:
+    external: true
+
 volumes:
-  minio:
-  neo4j:
+  ce_data:
