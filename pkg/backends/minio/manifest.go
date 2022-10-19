@@ -3,7 +3,9 @@ package minio
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"io"
+	"path/filepath"
 
 	"github.com/containers/image/v5/manifest"
 	"github.com/minio/minio-go/v7"
@@ -15,6 +17,8 @@ import (
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 )
+
+var aliasPrefix = "aliases"
 
 func (m Minio) GetManifest(ctx context.Context, up upstream.UpstreamTriple) (res types.Manifest, isCached bool, err error) {
 	l := logrus.WithFields(logrus.Fields{
@@ -29,7 +33,9 @@ func (m Minio) GetManifest(ctx context.Context, up upstream.UpstreamTriple) (res
 		attribute.Key("tag").String(up.Tag),
 	)
 	defer span.End()
-	_, err = m.ManifestsStatObj(ctx, up.GetObjPath())
+	aliasPath := filepath.Join(aliasPrefix, up.GetObjPath())
+	l.Warnf("aliasPath: %s", aliasPath)
+	_, err = m.ManifestsStatObj(ctx, aliasPath)
 	if err != nil {
 		if err.Error() == "The specified key does not exist." {
 			l.Warn("NOT CACHED -> return")
@@ -39,7 +45,7 @@ func (m Minio) GetManifest(ctx context.Context, up upstream.UpstreamTriple) (res
 		return
 	} else {
 		isCached = true
-		res, err = m.GetManifestViaPath(ctx, up.GetObjPath())
+		res, err = m.GetManifestViaPath(ctx, aliasPath)
 		if err != nil {
 			l.Error(err)
 			return
@@ -62,7 +68,7 @@ func (m Minio) PutManifest(ctx context.Context, b []byte, up upstream.UpstreamTr
 		attribute.Key("tag").String(up.Tag),
 	)
 	defer span.End()
-	err = m.ManifestsPutObj(ctx, up.GetObjPath(), up.ToBytes())
+	err = m.ManifestsPutObj(ctx, filepath.Join(aliasPrefix, up.GetObjPath()), up.ToBytes())
 	if err != nil {
 		l.Error(err)
 		return err
@@ -133,6 +139,35 @@ func (m Minio) NewManifestFromBytes(b []byte) (mani types.Manifest, err error) {
 	return
 }
 
+func (m Minio) RemoveManifestAliases() (err error) {
+	l := logrus.WithFields(logrus.Fields{
+		"packrusage": "backend/minio/manifest.go",
+		"func":       "RemoveManifestAliases",
+	})
+	l.Info("Start")
+	tr := otel.Tracer("neomin")
+	ctx, span := tr.Start(context.Background(), "RemoveManifestAliases")
+	defer span.End()
+	cli := m.BucketConfig[manifestsBucket].Client
+	objectCh := cli.ListObjects(ctx, manifestsBucket, minio.ListObjectsOptions{
+		Prefix:    aliasPrefix,
+		Recursive: true,
+	})
+	for object := range objectCh {
+		if object.Err != nil {
+			fmt.Println(object.Err)
+			return
+		}
+		err = m.ManifestRemoveObj(ctx, object.Key)
+		if err != nil {
+			l.Error(err)
+			continue
+		}
+		fmt.Println(object.Key)
+	}
+	return
+}
+
 func (m Minio) ManifestGetObj(ctx context.Context, path string) (mani types.Manifest, err error) {
 	l := logrus.WithFields(logrus.Fields{
 		"packrusage": "backend/minio/manifest.go",
@@ -166,6 +201,7 @@ func (m Minio) GetManifestViaPath(ctx context.Context, path string) (mani types.
 		"path":       path,
 	})
 	cli := m.BucketConfig[manifestsBucket].Client
+
 	obj, err := cli.GetObject(ctx, manifestsBucket, path, minio.GetObjectOptions{})
 	if err != nil {
 		l.Errorf("Error getting manifest via path: %s", err)
@@ -182,6 +218,5 @@ func (m Minio) GetManifestViaPath(ctx context.Context, path string) (mani types.
 		l.Error(err)
 		return
 	}
-	l.Warnf("ManifestDigest: %s", up.Digest.String())
 	return m.ManifestGetObj(ctx, up.Digest.String())
 }

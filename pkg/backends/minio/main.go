@@ -185,3 +185,8 @@ func (m Minio) ManifestsPutObj(ctx context.Context, object string, data []byte) 
 	_, err = cli.PutObject(ctx, manifestsBucket, object, bytes.NewReader(data), int64(len(data)), minio.PutObjectOptions{})
 	return
 }
+
+func (m Minio) ManifestRemoveObj(ctx context.Context, object string) (err error) {
+	cli := m.BucketConfig[manifestsBucket].Client
+	return cli.RemoveObject(ctx, manifestsBucket, object, minio.RemoveObjectOptions{})
+}

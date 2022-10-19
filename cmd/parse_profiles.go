@@ -28,7 +28,7 @@ func init() {
 	// Cobra supports Persistent Flags which will work for this command
 	// and all subcommands, e.g.:
 	// parseCmd.PersistentFlags().String("foo", "", "A help for foo")
-
+	parseProfilesCmd.Flags().Bool("empty-graph", false, "Remove all nodes and edges from the graph database")
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
 	// parseCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
@@ -55,7 +55,14 @@ func pParseCmd(cmd *cobra.Command, args []string) {
 	if err != nil {
 		logrus.Error(err)
 	}
-	_ = mag
+	emtpyGraph, _ := cmd.Flags().GetBool("empty-graph")
+	if emtpyGraph {
+		err = mag.Neo.EmptyGraph()
+		if err != nil {
+			logrus.Fatal(err)
+		}
+
+	}
 	for _, prf := range prfs {
 		// Insert Filter
 		f := types.Filter{

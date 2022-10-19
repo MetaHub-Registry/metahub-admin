@@ -25,6 +25,7 @@ func init() {
 	// Cobra supports Persistent Flags which will work for this command
 	// and all subcommands, e.g.:
 	// parseCmd.PersistentFlags().String("foo", "", "A help for foo")
+	parseManifestCmd.Flags().Bool("remove-manifests-alias", false, "Remove alias object in manifest (<reg>/<repo>/<tag> -> sha256)")
 
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
@@ -52,7 +53,13 @@ func pManiCmd(cmd *cobra.Command, args []string) {
 	if err != nil {
 		logrus.Error(err)
 	}
-
+	emtpyManiAlias, _ := cmd.Flags().GetBool("remove-manifests-alias")
+	if emtpyManiAlias {
+		err = mag.Minio.RemoveManifestAliases()
+		if err != nil {
+			logrus.Fatal(err)
+		}
+	}
 	for _, col := range cols {
 		logrus.Infof("# Col: %s:%s", col.Name, col.Tag)
 		for _, m := range col.Manifests {
