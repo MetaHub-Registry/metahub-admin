@@ -50,3 +50,5 @@ container:ecr:
   script:
     - docker build -t $IMAGE_NAME .
     - docker push $IMAGE_NAME
+    - docker build --target=busybox -t $IMAGE_NAME-busybox .
+    - docker push $IMAGE_NAME-busybox
