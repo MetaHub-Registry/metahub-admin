@@ -11,7 +11,7 @@ services:
      - mh-internal
     command: [/opt/bin/ce-fetch.sh, /opt/community-edition]
   admin:
-    image: 193198941246.dkr.ecr.eu-west-1.amazonaws.com/qnib-golang/metahub-admin:v0.1.4
+    image: 193198941246.dkr.ecr.eu-west-1.amazonaws.com/qnib-golang/metahub-admin:v0.1.5
     networks:
      - mh-internal
      - mh-data
