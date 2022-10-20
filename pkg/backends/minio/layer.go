@@ -30,7 +30,7 @@ func (m Minio) GetLayer(ctx context.Context, up upstream.UpstreamTriple, layer t
 		attribute.Key("digest").String(utils.ShortenDigest(layer.Digest)),
 	)
 	defer span.End()
-	_, err = m.LayerStatObj(ctx, layer.Digest)
+	_, err = m.LayersStatObj(ctx, layer.Digest)
 	if err != nil {
 		if err.Error() == "The specified key does not exist." {
 			return false, nil
@@ -43,8 +43,10 @@ func (m Minio) GetLayer(ctx context.Context, up upstream.UpstreamTriple, layer t
 	return
 }
 
-func (m Minio) LayerStatObj(ctx context.Context, object string) (obj minio.ObjectInfo, err error) {
-	return m.StatObj(ctx, layerBucket, object)
+func (m Minio) LayersStatObj(ctx context.Context, object string) (obj minio.ObjectInfo, err error) {
+	bucket := m.GetLayersBucketName()
+	cli := m.BucketConfig[layersBucketKey].Client
+	return cli.StatObject(ctx, bucket, object, minio.StatObjectOptions{})
 }
 
 func (m Minio) LayerGetObj(ctx context.Context, path string) (layer types.Layer, err error) {
@@ -53,8 +55,8 @@ func (m Minio) LayerGetObj(ctx context.Context, path string) (layer types.Layer,
 		"func":    "LayerGetObj",
 	})
 	_ = l
-	cli := m.BucketConfig[layerBucket].Client
-	obj, err := cli.GetObject(ctx, layerBucket, path, minio.GetObjectOptions{})
+	cli := m.BucketConfig[layersBucketKey].Client
+	obj, err := cli.GetObject(ctx, m.GetLayersBucketName(), path, minio.GetObjectOptions{})
 	if err != nil {
 		logrus.Errorf("Error getting layer: %s", err)
 		return
@@ -89,7 +91,7 @@ func (m Minio) PutLayer(ctx context.Context, b []byte, dig string) (err error) {
 }
 
 func (m Minio) LayerPutObj(ctx context.Context, object string, data []byte) (err error) {
-	cli := m.BucketConfig[layerBucket].Client
-	_, err = cli.PutObject(ctx, layerBucket, object, bytes.NewReader(data), int64(len(data)), minio.PutObjectOptions{})
+	cli := m.BucketConfig[layersBucketKey].Client
+	_, err = cli.PutObject(ctx, m.GetLayersBucketName(), object, bytes.NewReader(data), int64(len(data)), minio.PutObjectOptions{})
 	return
 }

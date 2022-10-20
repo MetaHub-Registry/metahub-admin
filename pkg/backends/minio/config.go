@@ -33,7 +33,7 @@ func (m Minio) GetConfig(ctx context.Context, up upstream.UpstreamTriple, cfg ty
 		attribute.Key("cfg").String(utils.ShortenDigest(cfg.Digest)),
 	)
 	defer span.End()
-	_, err = m.ConfigStatObj(ctx, cfg.Digest)
+	_, err = m.ConfigsStatObj(ctx, cfg.Digest)
 	if err != nil {
 		if err.Error() == "The specified key does not exist." {
 			return res, false, nil
@@ -58,8 +58,8 @@ func (m Minio) ConfigGetBytes(ctx context.Context, path string) (b []byte, err e
 		"func":    "ConfigGetObj",
 	})
 	_ = l
-	cli := m.BucketConfig[configsBucket].Client
-	obj, err := cli.GetObject(ctx, configsBucket, path, minio.GetObjectOptions{})
+	cli := m.BucketConfig[configsBucketKey].Client
+	obj, err := cli.GetObject(ctx, m.GetConfigsBucketName(), path, minio.GetObjectOptions{})
 	if err != nil {
 		logrus.Errorf("Error getting manifest: %s", err)
 		return
@@ -109,8 +109,8 @@ func (m Minio) PutConfig(ctx context.Context, b []byte, dig string) (err error) 
 }
 
 func (m Minio) ConfigPutObj(ctx context.Context, object string, data []byte) (err error) {
-	cli := m.BucketConfig[configsBucket].Client
-	_, err = cli.PutObject(ctx, configsBucket, object, bytes.NewReader(data), int64(len(data)), minio.PutObjectOptions{})
+	cli := m.BucketConfig[configsBucketKey].Client
+	_, err = cli.PutObject(ctx, m.GetConfigsBucketName(), object, bytes.NewReader(data), int64(len(data)), minio.PutObjectOptions{})
 	return
 }
 
