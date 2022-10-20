@@ -97,9 +97,9 @@ func TestMain(m *testing.M) {
 
 	min = Minio{}
 	min.BucketConfig = map[string]BucketConfig{
-		configsBucket:   newBucketConfig(configsBucket, minioC.HttpURI),
-		layerBucket:     newBucketConfig(layerBucket, minioC.HttpURI),
-		manifestsBucket: newBucketConfig(manifestsBucket, minioC.HttpURI),
+		configsBucketKey:   newBucketConfig(configsBucketKey, minioC.HttpURI),
+		layersBucketKey:    newBucketConfig(layersBucketKey, minioC.HttpURI),
+		manifestsBucketKey: newBucketConfig(manifestsBucketKey, minioC.HttpURI),
 	}
 	err = min.ConnectClients()
 	if err != nil {

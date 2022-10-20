@@ -15,9 +15,9 @@ import (
 )
 
 const (
-	layerBucket     = "layers"
-	manifestsBucket = "manifests"
-	configsBucket   = "configs"
+	layersBucketKey    = "layers"
+	manifestsBucketKey = "manifests"
+	configsBucketKey   = "configs"
 )
 
 type BucketConfig struct {
@@ -57,9 +57,15 @@ func NewMinio(cfgFile string) (m Minio, err error) {
 		viper.SetConfigType("yaml")
 	}
 	m.BucketConfig = map[string]BucketConfig{
-		layerBucket:     {},
-		manifestsBucket: {},
-		configsBucket:   {},
+		layersBucketKey: {
+			Bucket: layersBucketKey,
+		},
+		manifestsBucketKey: {
+			Bucket: manifestsBucketKey,
+		},
+		configsBucketKey: {
+			Bucket: configsBucketKey,
+		},
 	}
 	bc := BucketConfig{
 		URL:      viper.GetString("minio.url"),
@@ -79,6 +85,12 @@ func NewMinio(cfgFile string) (m Minio, err error) {
 			bCfg.URL = viper.GetString(key)
 		} else {
 			bCfg.URL = bc.URL
+		}
+		key = fmt.Sprintf("minio.%s.bucket", b)
+		if viper.IsSet(key) {
+			bCfg.Bucket = viper.GetString(key)
+		} else {
+			bCfg.Bucket = bc.Bucket
 		}
 		key = fmt.Sprintf("minio.%s.region", b)
 		if viper.IsSet(key) {
@@ -118,6 +130,17 @@ func NewMinio(cfgFile string) (m Minio, err error) {
 	}
 	return
 }
+func (m Minio) GetManifestsBucketName() string {
+	return m.BucketConfig[manifestsBucketKey].Bucket
+}
+
+func (m Minio) GetLayersBucketName() string {
+	return m.BucketConfig[layersBucketKey].Bucket
+}
+
+func (m Minio) GetConfigsBucketName() string {
+	return m.BucketConfig[configsBucketKey].Bucket
+}
 
 func (m Minio) ConnectClients() (err error) {
 	for _, v := range reflect.ValueOf(m.BucketConfig).MapKeys() {
@@ -149,44 +172,44 @@ func (m Minio) ConnectClients() (err error) {
 func (m Minio) BucketCheck() (err error) {
 	ctx := context.Background()
 	for _, bc := range m.BucketConfig {
-		logrus.Info("Checking bucket ", bc.Bucket)
 		exists, err := bc.Client.BucketExists(ctx, bc.Bucket)
 		if err != nil {
 			logrus.Errorf("Error checking bucket %s: %s\n", bc.Bucket, err)
 			return err
 		}
 		if !exists {
+			logrus.Infof("Creating bucket '%s'", bc.Bucket)
 			err = bc.Client.MakeBucket(ctx, bc.Bucket, minio.MakeBucketOptions{Region: bc.Region})
 			if err != nil {
 				logrus.Errorf(err.Error())
 				return err
 			}
+		} else {
+			logrus.Debugf("Bucket '%s' exists", bc.Bucket)
 		}
 	}
 	return
 }
 
-func (m Minio) StatObj(ctx context.Context, bucket, object string) (obj minio.ObjectInfo, err error) {
-	//logrus.Warnf("ConfigStatObj in bucket '%s': %s", bucket, object)
-	cli := m.BucketConfig[bucket].Client
+func (m Minio) ConfigsStatObj(ctx context.Context, object string) (obj minio.ObjectInfo, err error) {
+	bucket := m.GetConfigsBucketName()
+	cli := m.BucketConfig[configsBucketKey].Client
 	return cli.StatObject(ctx, bucket, object, minio.StatObjectOptions{})
 }
 
 func (m Minio) ManifestsStatObj(ctx context.Context, object string) (obj minio.ObjectInfo, err error) {
-	return m.StatObj(ctx, manifestsBucket, object)
-}
-
-func (m Minio) ConfigStatObj(ctx context.Context, object string) (obj minio.ObjectInfo, err error) {
-	return m.StatObj(ctx, configsBucket, object)
+	bucket := m.GetManifestsBucketName()
+	cli := m.BucketConfig[manifestsBucketKey].Client
+	return cli.StatObject(ctx, bucket, object, minio.StatObjectOptions{})
 }
 
 func (m Minio) ManifestsPutObj(ctx context.Context, object string, data []byte) (err error) {
-	cli := m.BucketConfig[manifestsBucket].Client
-	_, err = cli.PutObject(ctx, manifestsBucket, object, bytes.NewReader(data), int64(len(data)), minio.PutObjectOptions{})
+	cli := m.BucketConfig[manifestsBucketKey].Client
+	_, err = cli.PutObject(ctx, m.GetManifestsBucketName(), object, bytes.NewReader(data), int64(len(data)), minio.PutObjectOptions{})
 	return
 }
 
 func (m Minio) ManifestRemoveObj(ctx context.Context, object string) (err error) {
-	cli := m.BucketConfig[manifestsBucket].Client
-	return cli.RemoveObject(ctx, manifestsBucket, object, minio.RemoveObjectOptions{})
+	cli := m.BucketConfig[manifestsBucketKey].Client
+	return cli.RemoveObject(ctx, m.GetManifestsBucketName(), object, minio.RemoveObjectOptions{})
 }

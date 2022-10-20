@@ -148,8 +148,8 @@ func (m Minio) RemoveManifestAliases() (err error) {
 	tr := otel.Tracer("neomin")
 	ctx, span := tr.Start(context.Background(), "RemoveManifestAliases")
 	defer span.End()
-	cli := m.BucketConfig[manifestsBucket].Client
-	objectCh := cli.ListObjects(ctx, manifestsBucket, minio.ListObjectsOptions{
+	cli := m.BucketConfig[manifestsBucketKey].Client
+	objectCh := cli.ListObjects(ctx, m.GetManifestsBucketName(), minio.ListObjectsOptions{
 		Prefix:    aliasPrefix,
 		Recursive: true,
 	})
@@ -173,8 +173,8 @@ func (m Minio) ManifestGetObj(ctx context.Context, path string) (mani types.Mani
 		"func":       "ManifestGetObj",
 		"path":       path,
 	})
-	cli := m.BucketConfig[manifestsBucket].Client
-	obj, err := cli.GetObject(ctx, manifestsBucket, path, minio.GetObjectOptions{})
+	cli := m.BucketConfig[manifestsBucketKey].Client
+	obj, err := cli.GetObject(ctx, m.GetManifestsBucketName(), path, minio.GetObjectOptions{})
 	if err != nil {
 		logrus.Errorf("Error getting manifest: %s", err)
 		return
@@ -199,9 +199,9 @@ func (m Minio) GetManifestViaPath(ctx context.Context, path string) (mani types.
 		"func":       "GetManifestViaPath",
 		"path":       path,
 	})
-	cli := m.BucketConfig[manifestsBucket].Client
+	cli := m.BucketConfig[manifestsBucketKey].Client
 
-	obj, err := cli.GetObject(ctx, manifestsBucket, path, minio.GetObjectOptions{})
+	obj, err := cli.GetObject(ctx, m.GetManifestsBucketName(), path, minio.GetObjectOptions{})
 	if err != nil {
 		l.Errorf("Error getting manifest via path: %s", err)
 		return
