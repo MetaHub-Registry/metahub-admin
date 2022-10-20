@@ -189,7 +189,6 @@ func (m Minio) ManifestGetObj(ctx context.Context, path string) (mani types.Mani
 		err = errors.Wrapf(err, "m.NewManifestFromBytes")
 		l.Error(err)
 	}
-	l.Warnf("mani: %+v", mani.Config)
 	return
 }
 
