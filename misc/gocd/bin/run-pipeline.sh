@@ -1,10 +1,15 @@
 #!/bin/bash
+set -e
 
 if [[ -f /run/secrets/aws-access-key ]];then
     export AWS_ACCESS_KEY=$(cat /run/secrets/aws-access-key)
+elif [[ -f ~/.aws/credentials ]];then
+	export AWS_ACCESS_KEY=$(cat ~/.aws/credentials |wildq -M --ini '.s3.aws_access_key_id')
 fi
 if [[ -f /run/secrets/aws-secret-access-key ]];then
     export AWS_SECRET_ACCESS_KEY=$(cat /run/secrets/aws-secret-access-key)
+elif [[ -f ~/.aws/credentials ]];then
+	export AWS_SECRET_ACCESS_KEY=$(cat ~/.aws/credentials |wildq -M --ini '.s3.aws_secret_access_key')
 fi
 
 ## Setup metahub-admin config
