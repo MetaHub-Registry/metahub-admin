@@ -43,7 +43,7 @@ metahub-admin --config ${TMP_DIR}/metahub-admin.yaml compute manifestlists
 
 echo "#### Create SQLite DB"
 DBFILE=./metahub.db
-cp -r ./misc/yaml/users /opt/community-edition/
+cp -r ./misc/yaml/users ${TMP_DIR}/community-edition/users
 metahub-admin --config ${TMP_DIR}/metahub-admin.yaml parse users --metahub-db=${DBFILE} ./misc/yaml/users
 metahub-admin --config ${TMP_DIR}/metahub-admin.yaml sqlite --metahub-db=${DBFILE}
 rm -rf ${TMP_DIR}
