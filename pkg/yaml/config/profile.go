@@ -6,7 +6,7 @@ import (
 	"log"
 
 	"github.com/sirupsen/logrus"
-	"gitlab.com/qnib-golang/metahub/pkg/lib/utils"
+	"github.com/metahub-registry/metahub-admin/pkg/utils"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"gopkg.in/yaml.v3"

@@ -14,7 +14,7 @@ import (
 
 	"gopkg.in/yaml.v3"
 
-	"gitlab.com/qnib-golang/metahub/pkg/lib/utils"
+	"github.com/metahub-registry/metahub-admin/pkg/utils"
 )
 
 var (

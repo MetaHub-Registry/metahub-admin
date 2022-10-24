@@ -4,7 +4,7 @@ import (
 	"path/filepath"
 
 	"github.com/metahub-registry/metahub-admin/pkg/upstream"
-	"gitlab.com/qnib-golang/metahub/pkg/lib/utils"
+	"github.com/metahub-registry/metahub-admin/pkg/utils"
 )
 
 type Manifest struct {

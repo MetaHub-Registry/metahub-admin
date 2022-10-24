@@ -11,8 +11,8 @@ import (
 	"github.com/regclient/regclient/types"
 	"github.com/regclient/regclient/types/ref"
 	"github.com/sirupsen/logrus"
+	"github.com/metahub-registry/metahub-admin/pkg/utils"
 	mhTypes "github.com/metahub-registry/metahub-api/pkg/types"
-	"gitlab.com/qnib-golang/metahub/pkg/lib/utils"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 )

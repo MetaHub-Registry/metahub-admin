@@ -6,8 +6,8 @@ import (
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/metahub-registry/metahub-admin/pkg/upstream"
+	"github.com/metahub-registry/metahub-admin/pkg/utils"
 	"github.com/metahub-registry/metahub-api/pkg/types"
-	"gitlab.com/qnib-golang/metahub/pkg/lib/utils"
 )
 
 func (mag Magazine) CacheLayers(ctx context.Context, mani types.Manifest) (err error) {

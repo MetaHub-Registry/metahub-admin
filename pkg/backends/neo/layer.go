@@ -5,8 +5,8 @@ import (
 
 	"github.com/neo4j/neo4j-go-driver/v4/neo4j"
 	"github.com/sirupsen/logrus"
+	"github.com/metahub-registry/metahub-admin/pkg/utils"
 	"github.com/metahub-registry/metahub-api/pkg/types"
-	"gitlab.com/qnib-golang/metahub/pkg/lib/utils"
 )
 
 func (n Neo) GetLayer(layer types.Layer) (layerID int64, success bool, err error) {
