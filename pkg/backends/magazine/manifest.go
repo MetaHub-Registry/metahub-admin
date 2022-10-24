@@ -2,9 +2,10 @@ package magazine
 
 import (
 	"context"
-	"errors"
+	"fmt"
 
 	"github.com/opencontainers/go-digest"
+	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/metahub-registry/metahub-admin/pkg/backends/minio"
 	"github.com/metahub-registry/metahub-admin/pkg/upstream"
@@ -54,6 +55,7 @@ func (mag Magazine) CachManifest(ctx context.Context, m ycfg.Manifest) (mani typ
 	if !isCached {
 		b, blob, err := upstream.GetManifestByUpstreamTripleByTag(ctx, up)
 		if err != nil {
+			err = errors.Wrapf(err, "failed to GetManifestByUpstreamTripleByTag")
 			logrus.Error(err)
 			return mani, err
 		}
@@ -62,10 +64,20 @@ func (mag Magazine) CachManifest(ctx context.Context, m ycfg.Manifest) (mani typ
 			logrus.Error(err)
 			return mani, err
 		}
-		up.Digest = rawMani.ConfigInfo().Digest
+		switch blob.MediaType {
+		case "application/vnd.docker.distribution.manifest.v1+prettyjws":
+			err = fmt.Errorf("manifest type is not supported: %s", blob.MediaType)
+			return mani, err
+		case "application/vnd.docker.distribution.manifest.v2+json":
+			up.Digest = rawMani.ConfigInfo().Digest
+		default:
+			logrus.Fatalf("Unknown media type: %s", blob.MediaType)
+		}
+		//logrus.Fatalf("blobMeta: %v", blob)
 		// We need to make sure that the config-blob is cached
 		cfgByte, cfgBlob, err := upstream.GetBlobByUpstreamTriple(ctx, up)
 		if err != nil {
+			err = errors.Wrapf(err, "failed to GetBlobByUpstreamTriple")
 			logrus.Error(err)
 			return mani, err
 		}

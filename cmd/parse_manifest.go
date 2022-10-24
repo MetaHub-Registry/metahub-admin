@@ -67,6 +67,10 @@ func pManiCmd(cmd *cobra.Command, args []string) {
 			// Make sure manifest is cached (manifest, config, layers)
 			mani, err := mag.CachManifest(ctx, m)
 			if err != nil {
+				if err.Error() == "manifest type is not supported: application/vnd.docker.distribution.manifest.v1+prettyjws" {
+					logrus.Warnf(" SKIP > %s", err)
+					continue
+				}
 				logrus.Error(err)
 				continue
 			}
