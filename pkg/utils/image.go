@@ -58,6 +58,7 @@ func SplitImageName(name string) (reg, repo, ref string, err error) {
 		}
 	}
 	if !foundReg {
+		l.Warnf("No registry found in '%s' - fallback to docker.io", name)
 		reg = "docker.io"
 	}
 	_ = l
