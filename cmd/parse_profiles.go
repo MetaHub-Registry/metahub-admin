@@ -9,10 +9,10 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 
-	"github.com/metahub-registry/metahub-admin/pkg/backends/magazine"
 	"github.com/metahub-registry/metahub-admin/pkg/config"
-	yamlCfg "github.com/metahub-registry/metahub-admin/pkg/yaml/config"
+	"github.com/metahub-registry/metahub-core/pkg/backends/magazine"
 	"github.com/metahub-registry/metahub-core/pkg/types"
+	yamlCfg "github.com/metahub-registry/metahub-core/pkg/yaml/config"
 )
 
 var parseProfilesCmd = &cobra.Command{

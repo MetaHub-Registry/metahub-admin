@@ -1,9 +1,9 @@
 package transform
 
 import (
-	"github.com/metahub-registry/metahub-admin/pkg/backends/minio"
-	"github.com/metahub-registry/metahub-admin/pkg/backends/neo"
-	"github.com/metahub-registry/metahub-admin/pkg/backends/sqlite"
+	"github.com/metahub-registry/metahub-core/pkg/backends/minio"
+	"github.com/metahub-registry/metahub-core/pkg/backends/neo"
+	"github.com/metahub-registry/metahub-core/pkg/backends/sqlite"
 )
 
 type Transformer struct {

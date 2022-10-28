@@ -8,11 +8,11 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"github.com/metahub-registry/metahub-admin/pkg/backends/minio"
-	"github.com/metahub-registry/metahub-admin/pkg/backends/neo"
-	"github.com/metahub-registry/metahub-admin/pkg/backends/sqlite"
 	"github.com/metahub-registry/metahub-admin/pkg/backends/transform"
 	"github.com/metahub-registry/metahub-admin/pkg/config"
+	"github.com/metahub-registry/metahub-core/pkg/backends/minio"
+	"github.com/metahub-registry/metahub-core/pkg/backends/neo"
+	"github.com/metahub-registry/metahub-core/pkg/backends/sqlite"
 )
 
 // sqliteCmd represents the sqlite command
