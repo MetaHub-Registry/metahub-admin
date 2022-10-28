@@ -4,8 +4,8 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 
-	"github.com/metahub-registry/metahub-admin/pkg/backends/magazine"
 	"github.com/metahub-registry/metahub-admin/pkg/config"
+	"github.com/metahub-registry/metahub-core/pkg/backends/magazine"
 )
 
 var computeManifestlistsCmd = &cobra.Command{
