@@ -7,7 +7,7 @@ import (
 	"github.com/opencontainers/go-digest"
 	"github.com/sirupsen/logrus"
 	"github.com/metahub-registry/metahub-admin/pkg/utils"
-	"github.com/metahub-registry/metahub-api/pkg/types"
+	"github.com/metahub-registry/metahub-core/pkg/types"
 )
 
 func (n Neo) GetManifestList(dig digest.Digest, mt string, size int) (mlID int64, success bool, err error) {

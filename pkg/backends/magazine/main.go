@@ -22,30 +22,39 @@ func NewMagazine(cmd *cobra.Command, tables string) (m Magazine, err error) {
 		err = errors.Wrapf(err, "failed to create minio backend")
 		logrus.Fatal(err)
 	}
+	err = min.ConnectClients()
+	if err != nil {
+		err = errors.Wrapf(err, "failed to connect minio")
+		logrus.Fatal(err)
+	}
 	err = min.BucketCheck()
 	if err != nil {
 		err = errors.Wrapf(err, "failed to execute BucketCheck")
 		logrus.Fatal(err)
 	}
-	// GraphDB
-	neo, err := neo.New(cfgFile)
-	if err != nil {
-		err = errors.Wrapf(err, "failed to create Neo backend")
-		logrus.Fatal(err)
-	}
-	neo.Setup()
 	m = Magazine{
 		Minio: min,
-		Neo:   neo,
 	}
-
-	// SQLite
 	mhSqlFile, _ := cmd.Flags().GetString("metahub-db")
-	sqlite, err := sqlite.New(mhSqlFile, tables)
-	if err != nil {
-		err = errors.Wrapf(err, "failed to create sqlite backend")
-		logrus.Fatal(err)
+	if mhSqlFile != "" {
+		logrus.Infof("Using SQLite DB: %s", mhSqlFile)
+		// SQLite
+		sqlite, err := sqlite.New(mhSqlFile, tables)
+		if err != nil {
+			err = errors.Wrapf(err, "failed to create sqlite backend")
+			logrus.Fatal(err)
+		}
+		m.SQlite = sqlite
+	} else {
+		logrus.Info("No SQLite DB given, using GraphDB...")
+		// GraphDB
+		neo, err := neo.New(cfgFile)
+		if err != nil {
+			err = errors.Wrapf(err, "failed to create Neo backend")
+			logrus.Fatal(err)
+		}
+		neo.Setup()
+		m.Neo = neo
 	}
-	m.SQlite = sqlite
 	return
 }

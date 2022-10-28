@@ -11,7 +11,7 @@ import (
 	"github.com/metahub-registry/metahub-admin/pkg/backends/magazine"
 	"github.com/metahub-registry/metahub-admin/pkg/config"
 	yamlCfg "github.com/metahub-registry/metahub-admin/pkg/yaml/config"
-	"github.com/metahub-registry/metahub-api/pkg/types"
+	"github.com/metahub-registry/metahub-core/pkg/types"
 )
 
 var parseUsersCmd = &cobra.Command{
@@ -50,11 +50,11 @@ func uParseCmd(cmd *cobra.Command, args []string) {
 		logrus.Error(err)
 	}
 
-	mag, err := magazine.NewMagazine(cmd, USR_TABLES)
+	mag, err := magazine.NewMagazine(cmd, "")
 	if err != nil {
 		logrus.Error(err)
 	}
-	_ = mag
+	defer mag.SQlite.Close()
 	for _, user := range users {
 		u := types.User{
 			Username:  user.Username,

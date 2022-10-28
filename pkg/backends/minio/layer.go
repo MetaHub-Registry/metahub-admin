@@ -3,22 +3,20 @@ package minio
 import (
 	"bytes"
 	"context"
-	"io"
 
 	"github.com/minio/minio-go/v7"
 	"github.com/sirupsen/logrus"
 	"github.com/metahub-registry/metahub-admin/pkg/upstream"
 	"github.com/metahub-registry/metahub-admin/pkg/utils"
-	"github.com/metahub-registry/metahub-api/pkg/types"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 )
 
-func (m Minio) GetLayer(ctx context.Context, up upstream.UpstreamTriple, layer types.Layer) (isCached bool, err error) {
+func (m Minio) GetLayer(ctx context.Context, up upstream.UpstreamTriple) (isCached bool, err error) {
 	l := logrus.WithFields(logrus.Fields{
 		"package": "backends/minio",
 		"func":    "GetLayer",
-		"digest":  utils.ShortenDigest(layer.Digest),
+		"digest":  utils.ShortenDigest(up.Digest.String()),
 	})
 	_ = l
 	tr := otel.Tracer("neomin")
@@ -27,10 +25,10 @@ func (m Minio) GetLayer(ctx context.Context, up upstream.UpstreamTriple, layer t
 		attribute.Key("reg").String(up.Reg),
 		attribute.Key("repo").String(up.Repo),
 		attribute.Key("tag").String(up.Tag),
-		attribute.Key("digest").String(utils.ShortenDigest(layer.Digest)),
+		attribute.Key("digest").String(utils.ShortenDigest(up.Digest.String())),
 	)
 	defer span.End()
-	_, err = m.LayersStatObj(ctx, layer.Digest)
+	_, err = m.LayersStatObj(ctx, up.Digest.String())
 	if err != nil {
 		if err.Error() == "The specified key does not exist." {
 			return false, nil
@@ -47,27 +45,6 @@ func (m Minio) LayersStatObj(ctx context.Context, object string) (obj minio.Obje
 	bucket := m.GetLayersBucketName()
 	cli := m.BucketConfig[layersBucketKey].Client
 	return cli.StatObject(ctx, bucket, object, minio.StatObjectOptions{})
-}
-
-func (m Minio) LayerGetObj(ctx context.Context, path string) (layer types.Layer, err error) {
-	l := logrus.WithFields(logrus.Fields{
-		"package": "backends/minio",
-		"func":    "LayerGetObj",
-	})
-	_ = l
-	cli := m.BucketConfig[layersBucketKey].Client
-	obj, err := cli.GetObject(ctx, m.GetLayersBucketName(), path, minio.GetObjectOptions{})
-	if err != nil {
-		logrus.Errorf("Error getting layer: %s", err)
-		return
-	}
-	defer obj.Close()
-	b, e := io.ReadAll(obj)
-	if e != nil {
-		logrus.Fatal(e)
-	}
-	_ = b
-	return
 }
 
 func (m Minio) PutLayer(ctx context.Context, b []byte, dig string) (err error) {
@@ -94,4 +71,13 @@ func (m Minio) LayerPutObj(ctx context.Context, object string, data []byte) (err
 	cli := m.BucketConfig[layersBucketKey].Client
 	_, err = cli.PutObject(ctx, m.GetLayersBucketName(), object, bytes.NewReader(data), int64(len(data)), minio.PutObjectOptions{})
 	return
+}
+
+func (m Minio) LayerRemoveObj(ctx context.Context, object string) (err error) {
+	cli := m.BucketConfig[layersBucketKey].Client
+	return cli.RemoveObject(ctx, m.GetLayersBucketName(), object, minio.RemoveObjectOptions{})
+}
+
+func (m Minio) GetLayersBucketName() string {
+	return m.BucketConfig[layersBucketKey].Bucket
 }

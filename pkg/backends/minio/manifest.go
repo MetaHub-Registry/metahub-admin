@@ -1,6 +1,7 @@
 package minio
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -13,7 +14,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/metahub-registry/metahub-admin/pkg/upstream"
-	"github.com/metahub-registry/metahub-api/pkg/types"
+	"github.com/metahub-registry/metahub-core/pkg/types"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 )
@@ -217,4 +218,25 @@ func (m Minio) GetManifestViaPath(ctx context.Context, path string) (mani types.
 		return
 	}
 	return m.ManifestGetObj(ctx, up.Digest.String())
+}
+
+func (m Minio) ManifestsStatObj(ctx context.Context, object string) (obj minio.ObjectInfo, err error) {
+	bucket := m.GetManifestsBucketName()
+	cli := m.BucketConfig[manifestsBucketKey].Client
+	return cli.StatObject(ctx, bucket, object, minio.StatObjectOptions{})
+}
+
+func (m Minio) ManifestsPutObj(ctx context.Context, object string, data []byte) (err error) {
+	cli := m.BucketConfig[manifestsBucketKey].Client
+	_, err = cli.PutObject(ctx, m.GetManifestsBucketName(), object, bytes.NewReader(data), int64(len(data)), minio.PutObjectOptions{})
+	return
+}
+
+func (m Minio) ManifestRemoveObj(ctx context.Context, object string) (err error) {
+	cli := m.BucketConfig[manifestsBucketKey].Client
+	return cli.RemoveObject(ctx, m.GetManifestsBucketName(), object, minio.RemoveObjectOptions{})
+}
+
+func (m Minio) GetManifestsBucketName() string {
+	return m.BucketConfig[manifestsBucketKey].Bucket
 }

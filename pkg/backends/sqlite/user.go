@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/sirupsen/logrus"
-	"github.com/metahub-registry/metahub-api/pkg/types"
+	"github.com/metahub-registry/metahub-core/pkg/types"
 )
 
 // User is the stucture which holds one user from the database. Note
@@ -39,7 +39,7 @@ func (u User) CreateTables() (err error) {
 	}
 	s := `CREATE TABLE IF NOT EXISTS %s (
         id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
-		"user_name" TEXT,
+		"user_name" TEXT UNIQUE NOT NULL,
 		"email" TEXT,
 		"first_name" TEXT,
 		"last_name" TEXT,
@@ -64,8 +64,6 @@ func (u User) CreateTables() (err error) {
 func (u User) CreateViews() (err error) {
 	return
 }
-
-/// SQLITE
 
 func (s Sqlite) InsertUser(ctx context.Context, u types.User) (userID int64, err error) {
 	q := `INSERT INTO users (user_name, email, first_name, last_name, password_hash, user_active, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)`

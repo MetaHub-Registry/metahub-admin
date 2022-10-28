@@ -1,20 +1,20 @@
 package config
 
 import (
-	"path/filepath"
-
+	"github.com/opencontainers/go-digest"
+	"github.com/regclient/regclient/types/platform"
 	"github.com/metahub-registry/metahub-admin/pkg/upstream"
 	"github.com/metahub-registry/metahub-admin/pkg/utils"
 )
 
 type Manifest struct {
-	Registry string   `yaml:"registry"`
-	Image    string   `yaml:"image"`
-	Platform Platform `yaml:"platform"`
+	Image    string            `yaml:"image"`
+	Digest   string            `yaml:"digest"`
+	Platform platform.Platform `yaml:"platform"`
 }
 
 func (m Manifest) ToUpstreamTriple() (u upstream.UpstreamTriple, err error) {
-	reg, repo, tag, err := utils.SplitImageName(filepath.Join(m.Registry, m.Image))
+	reg, repo, tag, err := utils.SplitImageName(m.Image)
 	if err != nil {
 		return
 	}
@@ -22,6 +22,15 @@ func (m Manifest) ToUpstreamTriple() (u upstream.UpstreamTriple, err error) {
 		Reg:  reg,
 		Repo: repo,
 		Tag:  tag,
+		Platform: platform.Platform{
+			Architecture: m.Platform.Architecture,
+			OS:           m.Platform.OS,
+			Variant:      m.Platform.Variant,
+			Features:     m.Platform.Features,
+		},
+	}
+	if m.Digest != "" {
+		u.Digest = digest.Digest(m.Digest)
 	}
 	return
 }

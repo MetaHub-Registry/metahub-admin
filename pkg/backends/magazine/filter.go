@@ -3,7 +3,7 @@ package magazine
 import (
 	"context"
 
-	"github.com/metahub-registry/metahub-api/pkg/types"
+	"github.com/metahub-registry/metahub-core/pkg/types"
 )
 
 func (mag Magazine) NeoInsertFilter(ctx context.Context, f types.Filter) (filterID int64, err error) {
@@ -16,6 +16,21 @@ func (mag Magazine) NeoInsertFilter(ctx context.Context, f types.Filter) (filter
 		if err != nil {
 			return
 		}
+	}
+	return
+}
+
+func (mag Magazine) SQliteInsertFilter(ctx context.Context, f types.Filter) (filterID int64, err error) {
+	filterID, success, err := mag.SQlite.Filter.GetFilter(f)
+	if err != nil {
+		return
+	}
+	if !success {
+		err = mag.SQlite.Filter.InsertFilter(&f)
+		if err != nil {
+			return
+		}
+		filterID = f.SqlID
 	}
 	return
 }

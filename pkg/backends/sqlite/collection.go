@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/sirupsen/logrus"
-	"github.com/metahub-registry/metahub-api/pkg/types"
+	"github.com/metahub-registry/metahub-core/pkg/types"
 )
 
 type Collection struct {
@@ -89,6 +89,7 @@ func (c *Collection) GetAll() (cols []Collection, err error) {
 
 func (c *Collection) GetCollectionByID(colID int64) (col Collection, err error) {
 	q := fmt.Sprintf(`SELECT * FROM main.v_get_collection WHERE colID = %d`, colID)
+	logrus.Errorf("q: %s", q)
 	rows, err := db.Query(q)
 	if err != nil {
 		logrus.Error(err)
@@ -212,6 +213,49 @@ func (c *Collection) CreateViews() (err error) {
 		logrus.Error(err)
 		return
 	}
+	err = c.CreateCollectionView()
+	if err != nil {
+		logrus.Error(err)
+		return
+	}
+	return
+}
+
+func (c *Collection) CreateCollectionView() (err error) {
+	q := `CREATE VIEW IF NOT EXISTS v_get_collection AS
+	SELECT
+		collections.id AS colID,
+		collections.repo AS colRepo,
+		collections.tag AS colTag,
+		manifests.id AS maniID,
+		upstreams.reg AS upstreamReg,
+		upstreams.repo AS upstreamRepo,
+		upstreams.tag AS upstreamTag,
+		platforms.os AS os,
+		platforms.arch AS arch,
+		platforms.variant AS variant,
+		platforms.features AS features,
+		profiles.name	 AS profile
+	FROM collections
+	INNER JOIN collection_xtable
+		ON collections.id = collection_xtable.collection_id
+	INNER JOIN manifestlists
+		ON collection_xtable.manifestlist_id = manifestlists.id
+	INNER JOIN manifestlist_xtable
+		ON manifestlists.id = manifestlist_xtable.manifestlist_id
+	INNER JOIN manifests
+		ON manifestlist_xtable.manifest_id = manifests.id
+	INNER JOIN upstreams
+		ON manifests.upstream_id = upstreams.id
+	INNER JOIN platforms
+		ON manifests.platform_id = platforms.id
+	INNER JOIN platform_filter
+		ON platforms.id = platform_filter.platform_id
+	INNER JOIN profile_filter
+		ON platform_filter.filter_id = profile_filter.filter_id
+	INNER JOIN profiles
+		ON profiles.id = profile_filter.profile_id`
+	_, err = db.Exec(q)
 	return
 }
 

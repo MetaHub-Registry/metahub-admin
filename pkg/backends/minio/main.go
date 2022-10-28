@@ -1,7 +1,6 @@
 package minio
 
 import (
-	"bytes"
 	"context"
 	"fmt"
 	"os"
@@ -124,22 +123,7 @@ func NewMinio(cfgFile string) (m Minio, err error) {
 		}
 		m.BucketConfig[b] = bCfg
 	}
-	err = m.ConnectClients()
-	if err != nil {
-		logrus.Error(err)
-	}
 	return
-}
-func (m Minio) GetManifestsBucketName() string {
-	return m.BucketConfig[manifestsBucketKey].Bucket
-}
-
-func (m Minio) GetLayersBucketName() string {
-	return m.BucketConfig[layersBucketKey].Bucket
-}
-
-func (m Minio) GetConfigsBucketName() string {
-	return m.BucketConfig[configsBucketKey].Bucket
 }
 
 func (m Minio) ConnectClients() (err error) {
@@ -189,27 +173,4 @@ func (m Minio) BucketCheck() (err error) {
 		}
 	}
 	return
-}
-
-func (m Minio) ConfigsStatObj(ctx context.Context, object string) (obj minio.ObjectInfo, err error) {
-	bucket := m.GetConfigsBucketName()
-	cli := m.BucketConfig[configsBucketKey].Client
-	return cli.StatObject(ctx, bucket, object, minio.StatObjectOptions{})
-}
-
-func (m Minio) ManifestsStatObj(ctx context.Context, object string) (obj minio.ObjectInfo, err error) {
-	bucket := m.GetManifestsBucketName()
-	cli := m.BucketConfig[manifestsBucketKey].Client
-	return cli.StatObject(ctx, bucket, object, minio.StatObjectOptions{})
-}
-
-func (m Minio) ManifestsPutObj(ctx context.Context, object string, data []byte) (err error) {
-	cli := m.BucketConfig[manifestsBucketKey].Client
-	_, err = cli.PutObject(ctx, m.GetManifestsBucketName(), object, bytes.NewReader(data), int64(len(data)), minio.PutObjectOptions{})
-	return
-}
-
-func (m Minio) ManifestRemoveObj(ctx context.Context, object string) (err error) {
-	cli := m.BucketConfig[manifestsBucketKey].Client
-	return cli.RemoveObject(ctx, m.GetManifestsBucketName(), object, minio.RemoveObjectOptions{})
 }

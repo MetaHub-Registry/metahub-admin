@@ -20,7 +20,8 @@ const (
 var min Minio
 
 var (
-	featureTestGenericMani = []byte(`{
+	featureTestGenericManiDigest = "sha256:9a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b"
+	featureTestGenericMani       = []byte(`{
 		"schemaVersion": 2,
 		"mediaType": "application/vnd.docker.distribution.manifest.v2+json",
 		"config": {
@@ -89,13 +90,18 @@ func newBucketConfig(bucket, url string) BucketConfig {
 }
 
 func TestMain(m *testing.M) {
+	logrus.Info("Start TestMain")
 	ctx := context.Background()
 	minioC, err := SetupMinio(ctx)
 	if err != nil {
 		logrus.Fatal(err)
 	}
-
-	min = Minio{}
+	cfgName := "../../../misc/config/metahub-admin.yaml"
+	min, err = NewMinio(cfgName)
+	if err != nil {
+		logrus.Fatal(err)
+	}
+	logrus.Warnf("Minio: %v", min)
 	min.BucketConfig = map[string]BucketConfig{
 		configsBucketKey:   newBucketConfig(configsBucketKey, minioC.HttpURI),
 		layersBucketKey:    newBucketConfig(layersBucketKey, minioC.HttpURI),
@@ -111,6 +117,7 @@ func TestMain(m *testing.M) {
 	}
 	code := m.Run()
 	os.Exit(code)
+	logrus.Info("End TestMain")
 }
 
 type MinioContainer struct {

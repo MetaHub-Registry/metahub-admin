@@ -8,7 +8,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	yamlCfg "github.com/metahub-registry/metahub-admin/pkg/yaml/config"
-	"github.com/metahub-registry/metahub-api/pkg/types"
+	"github.com/metahub-registry/metahub-core/pkg/types"
 )
 
 func (n Neo) GetCollection(col yamlCfg.ManifestCollection) (colId int64, success bool, err error) {

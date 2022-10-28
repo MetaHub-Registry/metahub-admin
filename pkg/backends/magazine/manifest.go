@@ -10,7 +10,7 @@ import (
 	"github.com/metahub-registry/metahub-admin/pkg/backends/minio"
 	"github.com/metahub-registry/metahub-admin/pkg/upstream"
 	ycfg "github.com/metahub-registry/metahub-admin/pkg/yaml/config"
-	"github.com/metahub-registry/metahub-api/pkg/types"
+	"github.com/metahub-registry/metahub-core/pkg/types"
 )
 
 func (mag Magazine) GetManifest(ctx context.Context, m ycfg.Manifest) (mani types.Manifest, err error) {
@@ -31,9 +31,10 @@ func (mag Magazine) GetManifest(ctx context.Context, m ycfg.Manifest) (mani type
 		return
 	}
 	mani.Upstream = types.Upstream{
-		Reg:  up.Reg,
-		Repo: up.Repo,
-		Tag:  up.Tag,
+		Reg:    up.Reg,
+		Repo:   up.Repo,
+		Tag:    up.Tag,
+		Digest: up.Digest,
 	}
 	return
 }
@@ -64,6 +65,12 @@ func (mag Magazine) CachManifest(ctx context.Context, m ycfg.Manifest) (mani typ
 			logrus.Error(err)
 			return mani, err
 		}
+		sB, err := rawMani.Serialize()
+		if err != nil {
+			logrus.Error(err)
+		}
+		logrus.Fatal("CachManifest: ", string(sB))
+
 		switch blob.MediaType {
 		case "application/vnd.docker.distribution.manifest.v1+prettyjws":
 			err = fmt.Errorf("manifest type is not supported: %s", blob.MediaType)

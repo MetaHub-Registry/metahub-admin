@@ -61,6 +61,8 @@ func Cmd(cmd *cobra.Command, args []string) {
 	defer sq.Close()
 	m, err := minio.NewMinio(cfgFile)
 	checkErr(err, "while NewMinio")
+	err = m.ConnectClients()
+	checkErr(err, "while ConnectClients")
 	err = m.BucketCheck()
 	checkErr(err, "while BucketCheck")
 	neo, err := neo.New(cfgFile)

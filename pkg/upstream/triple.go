@@ -5,15 +5,17 @@ import (
 	"fmt"
 
 	digestLib "github.com/opencontainers/go-digest"
+	"github.com/regclient/regclient/types/platform"
 )
 
 type UpstreamTriple struct {
-	Reg       string           `json:"reg"`
-	Repo      string           `json:"repo"`
-	Tag       string           `json:"tag"`
-	MediaType string           `json:"mediaType"`
-	Size      int64            `json:"size"`
-	Digest    digestLib.Digest `json:"digest"`
+	Reg       string            `json:"reg"`
+	Repo      string            `json:"repo"`
+	Tag       string            `json:"tag"`
+	MediaType string            `json:"mediaType"`
+	Size      int64             `json:"size"`
+	Digest    digestLib.Digest  `json:"digest"`
+	Platform  platform.Platform `json:"platform"`
 }
 
 func NewUpstreamTriple(k map[string]interface{}) (up UpstreamTriple, err error) {
