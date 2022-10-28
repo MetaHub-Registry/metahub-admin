@@ -6,24 +6,23 @@ require (
 	github.com/chrispappas/golang-generics-set v1.0.1
 	github.com/containers/image/v5 v5.23.0
 	github.com/docker/distribution v2.8.1+incompatible
-	github.com/mattn/go-sqlite3 v1.14.15
-	github.com/minio/minio-go/v7 v7.0.41
+	github.com/mattn/go-sqlite3 v1.14.16
+	github.com/minio/minio-go/v7 v7.0.42
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/neo4j/neo4j-go-driver/v4 v4.4.4
 	github.com/opencontainers/go-digest v1.0.0
 	github.com/opencontainers/image-spec v1.1.0-rc1
 	github.com/pkg/errors v0.9.1
-	github.com/regclient/regclient v0.4.4
+	github.com/regclient/regclient v0.4.5
 	github.com/sirupsen/logrus v1.9.0
 	github.com/spf13/cobra v1.6.0
 	github.com/spf13/pflag v1.0.5
 	github.com/spf13/viper v1.13.0
 	github.com/stretchr/testify v1.8.0
-	github.com/testcontainers/testcontainers-go v0.13.0
-	gitlab.com/qnib-golang/metahub v0.0.0-00010101000000-000000000000
-	github.com/metahub-registry/metahub-api v0.0.0-00010101000000-000000000000
-	go.opentelemetry.io/otel v1.10.0
-	golang.org/x/crypto v0.0.0-20220919173607-35f4265a4bc0
+	github.com/testcontainers/testcontainers-go v0.15.0
+	github.com/metahub-registry/metahub-core v0.0.0-00010101000000-000000000000
+	go.opentelemetry.io/otel v1.11.1
+	golang.org/x/crypto v0.1.0
 	gopkg.in/yaml.v3 v3.0.1
 )
 
@@ -76,10 +75,10 @@ require (
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
 	github.com/subosito/gotenv v1.4.1 // indirect
 	go.opencensus.io v0.23.0 // indirect
-	go.opentelemetry.io/otel/trace v1.10.0 // indirect
-	golang.org/x/net v0.0.0-20220909164309-bea034e7d591 // indirect
-	golang.org/x/sys v0.0.0-20220919091848-fb04ddd9f9c8 // indirect
-	golang.org/x/text v0.3.7 // indirect
+	go.opentelemetry.io/otel/trace v1.11.1 // indirect
+	golang.org/x/net v0.1.0 // indirect
+	golang.org/x/sys v0.1.0 // indirect
+	golang.org/x/text v0.4.0 // indirect
 	google.golang.org/genproto v0.0.0-20220822174746-9e6da59bd2fc // indirect
 	google.golang.org/grpc v1.49.0 // indirect
 	google.golang.org/protobuf v1.28.1 // indirect
@@ -87,8 +86,4 @@ require (
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 )
 
-replace gitlab.com/qnib-golang/metahub => /Users/kniepbert/go/src/gitlab.com/qnib-golang/metahub
-
-replace github.com/metahub-registry/metahub-api => /Users/kniepbert/go/src/github.com/metahub-registry/metahub-api
-
-replace github.com/metahub-registry/metahub-api/pkg/backends/sqlite => /Users/kniepbert/go/src/github.com/metahub-registry/metahub-api/pkg/backends/sqlite
+replace github.com/metahub-registry/metahub-core => /Users/kniepbert/go/src/github.com/metahub-registry/metahub-core

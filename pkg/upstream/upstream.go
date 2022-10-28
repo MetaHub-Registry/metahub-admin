@@ -9,10 +9,12 @@ import (
 	"github.com/pkg/errors"
 	"github.com/regclient/regclient"
 	"github.com/regclient/regclient/types"
+	"github.com/regclient/regclient/types/manifest"
+	"github.com/regclient/regclient/types/platform"
 	"github.com/regclient/regclient/types/ref"
 	"github.com/sirupsen/logrus"
 	"github.com/metahub-registry/metahub-admin/pkg/utils"
-	mhTypes "github.com/metahub-registry/metahub-api/pkg/types"
+	mhTypes "github.com/metahub-registry/metahub-core/pkg/types"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 )
@@ -119,15 +121,26 @@ func GetManifestByUpstreamTripleByTag(ctx context.Context, up UpstreamTriple) (b
 	if err != nil {
 		l.Errorf("Failed creating ref: %v", err)
 	}
-	mani, err := rc.ManifestHead(ctx, ref)
-	if err != nil {
-		l.Fatalf(err.Error())
+	var mani manifest.Manifest
+	// If we have a digest we use it
+	if up.Digest.String() != "" {
+		ref.Digest = up.Digest.String()
+	} else {
+		mani, err = rc.ManifestHead(ctx, ref)
+		if err != nil {
+			l.Fatalf(err.Error())
+		}
+		ref.Digest = mani.GetDescriptor().Digest.String()
+		blob.Digest = mani.GetDescriptor().Digest
+		blob.Size = mani.GetDescriptor().Size
+		blob.MediaType = mani.GetDescriptor().MediaType
 	}
-	ref.Digest = mani.GetDescriptor().Digest.String()
-	blob.Digest = mani.GetDescriptor().Digest
-	blob.Size = mani.GetDescriptor().Size
-	blob.MediaType = mani.GetDescriptor().MediaType
-	mani, err = rc.ManifestGet(ctx, ref)
+	d := types.Descriptor{
+		MediaType: types.MediaTypeDocker2Manifest,
+		Digest:    digest.Digest(ref.Digest),
+		Platform:  &platform.Platform{},
+	}
+	mani, err = rc.ManifestGet(ctx, ref, regclient.WithManifestDesc(d))
 	b, err = mani.RawBody()
 	if err != nil {
 		l.Fatalf(err.Error())

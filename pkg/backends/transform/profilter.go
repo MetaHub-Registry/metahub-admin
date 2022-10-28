@@ -14,13 +14,13 @@ func (t Transformer) ProfilterToSqlite() (err error) {
 	}
 	for idx, pfp := range pfps {
 		p := pfp.Profile
-		profileID, err := t.SQlite.Profile.HasProfile(p.Name)
+		profileID, found, err := t.SQlite.Profile.HasProfile(p.Name)
 		if err != nil {
 			err = errors.Wrap(err, "t.SQlite.Profile.HasProfile(p.Name)")
 			logrus.Error(err)
 			continue
 		}
-		if profileID == 0 {
+		if !found {
 			err = t.SQlite.Profile.Insert(&p)
 			if err != nil {
 				err = errors.Wrap(err, "t.SQlite.Profile.Insert(&p")

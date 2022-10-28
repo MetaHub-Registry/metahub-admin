@@ -3,11 +3,12 @@ package magazine
 import (
 	"context"
 
+	"github.com/opencontainers/go-digest"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/metahub-registry/metahub-admin/pkg/upstream"
 	"github.com/metahub-registry/metahub-admin/pkg/utils"
-	"github.com/metahub-registry/metahub-api/pkg/types"
+	"github.com/metahub-registry/metahub-core/pkg/types"
 )
 
 func (mag Magazine) CacheLayers(ctx context.Context, mani types.Manifest) (err error) {
@@ -17,7 +18,8 @@ func (mag Magazine) CacheLayers(ctx context.Context, mani types.Manifest) (err e
 		Tag:  mani.Upstream.Tag,
 	}
 	for idx, layer := range mani.Layers {
-		isCached, e := mag.Minio.GetLayer(ctx, up, layer)
+		up.Digest = digest.Digest(layer.Digest)
+		isCached, e := mag.Minio.GetLayer(ctx, up)
 		if e != nil {
 			err = e
 			logrus.Error(err)

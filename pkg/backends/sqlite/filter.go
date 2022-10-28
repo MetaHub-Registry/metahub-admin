@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/sirupsen/logrus"
-	"github.com/metahub-registry/metahub-api/pkg/types"
+	"github.com/metahub-registry/metahub-core/pkg/types"
 )
 
 type Filter struct {
@@ -86,6 +86,30 @@ func (f Filter) createProfileFilterXTable() (err error) {
 		logrus.Fatal(err)
 	}
 	logrus.Infof("Table '%s' created successfully!", tableName)
+	return
+}
+
+func (f Filter) GetFilter(fltr types.Filter) (filterID int64, found bool, err error) {
+	q := `SELECT id FROM filters WHERE label = ?`
+	stmt, err := db.Prepare(q)
+	if err != nil {
+		logrus.Error(err)
+		return
+	}
+	rows, err := stmt.Query(fltr.Label)
+	if err != nil {
+		logrus.Error(err)
+		return
+	}
+	defer rows.Close()
+	if rows.Next() {
+		err = rows.Scan(&fltr.SqlID)
+		if err != nil {
+			logrus.Error(err)
+		}
+		filterID = fltr.SqlID
+		found = true
+	}
 	return
 }
 

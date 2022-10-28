@@ -32,6 +32,7 @@ type Sqlite struct {
 
 func New(mhFile string, tables string) (s Sqlite, err error) {
 	s = Sqlite{
+		MhFile:       mhFile,
 		User:         User{},
 		Token:        Token{},
 		Config:       Config{},

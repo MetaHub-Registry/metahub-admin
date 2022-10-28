@@ -115,7 +115,7 @@ func readManifestConfig(yamlStr []byte) (conf ManifestConfig, err error) {
 	})
 	// First unmarshall into generic structure
 	conf = ManifestConfig{}
-
+	l.Warnf("yamlStr:\n%s", yamlStr)
 	err = yaml.Unmarshal(yamlStr, &conf)
 	if err != nil {
 		l.Fatalf("Unmarshal: %v\n", err)
@@ -123,11 +123,11 @@ func readManifestConfig(yamlStr []byte) (conf ManifestConfig, err error) {
 	}
 	for i, ml := range conf.Manifests {
 		for j, m := range ml.Manifests {
-			if m.Platform.Os == "" {
-				m.Platform.Os = defaultOS
+			if m.Platform.OS == "" {
+				m.Platform.OS = defaultOS
 			}
-			if m.Platform.Arch == "" {
-				m.Platform.Arch = defaultArch
+			if m.Platform.Architecture == "" {
+				m.Platform.Architecture = defaultArch
 			}
 			conf.Manifests[i].Manifests[j] = m
 		}

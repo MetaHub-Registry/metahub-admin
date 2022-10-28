@@ -1,10 +1,11 @@
 package sqlite
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/sirupsen/logrus"
-	"github.com/metahub-registry/metahub-api/pkg/types"
+	"github.com/metahub-registry/metahub-core/pkg/types"
 )
 
 type Profile struct {
@@ -45,7 +46,7 @@ func (p Profile) createTable() (err error) {
 	return
 }
 
-func (p Profile) HasProfile(name string) (profileID int64, err error) {
+func (p Profile) HasProfile(name string) (profileID int64, found bool, err error) {
 	q := `SELECT id FROM profiles WHERE name = ?`
 	stmt, err := db.Prepare(q)
 	if err != nil {
@@ -63,6 +64,7 @@ func (p Profile) HasProfile(name string) (profileID int64, err error) {
 		if err != nil {
 			logrus.Error(err)
 		}
+		found = true
 	}
 	return
 }
@@ -78,5 +80,49 @@ func (p Profile) Insert(prf *types.Profile) (err error) {
 		logrus.Fatal(err)
 	}
 	prf.SqlID, err = res.LastInsertId()
+	return
+}
+
+func (s Sqlite) GetProfileFilterLink(ctx context.Context, profileID, filterID int64) (id int64, found bool, err error) {
+	q := `SELECT id FROM profile_filter WHERE profile_id = ? AND filter_id = ?`
+	stmt, err := db.Prepare(q)
+	if err != nil {
+		logrus.Error(err)
+		return
+	}
+	rows, err := stmt.Query(profileID, filterID)
+	if err != nil {
+		logrus.Error(err)
+		return
+	}
+	defer rows.Close()
+	if rows.Next() {
+		err = rows.Scan(&id)
+		if err != nil {
+			logrus.Error(err)
+		}
+		found = true
+	}
+	return
+}
+
+func (s Sqlite) LinkProfileToFilter(ctx context.Context, profileID, filterID int64) (err error) {
+	_, found, err := s.GetProfileFilterLink(ctx, profileID, filterID)
+	if err != nil {
+		logrus.Error(err)
+		return
+	}
+	if found {
+		//logrus.Infof("Link between profile '%d' and filter '%d' already exists", profileID, filterID)
+		return
+	}
+	stmt, err := db.Prepare("INSERT INTO profile_filter (profile_id, filter_id) VALUES (?, ?)")
+	if err != nil {
+		logrus.Fatal(err)
+	}
+	_, err = stmt.Exec(profileID, filterID)
+	if err != nil {
+		logrus.Fatal(err)
+	}
 	return
 }

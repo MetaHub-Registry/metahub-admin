@@ -11,15 +11,15 @@ import (
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/metahub-registry/metahub-admin/pkg/upstream"
-	"github.com/metahub-registry/metahub-admin/pkg/utils"
-	"github.com/metahub-registry/metahub-api/pkg/types"
+	"github.com/metahub-registry/metahub-core/pkg/types"
+	"github.com/metahub-registry/metahub-core/pkg/utils"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 
 	imgTypes "github.com/containers/image/v5/types"
 )
 
-func (m Minio) GetConfig(ctx context.Context, up upstream.UpstreamTriple, cfg types.Config) (res types.Config, isCached bool, err error) {
+func (m Minio) GetConfig(ctx context.Context, up upstream.UpstreamTriple) (res types.Config, isCached bool, err error) {
 	l := logrus.WithFields(logrus.Fields{
 		"package": "backends/minio",
 		"func":    "GetConfig",
@@ -30,20 +30,22 @@ func (m Minio) GetConfig(ctx context.Context, up upstream.UpstreamTriple, cfg ty
 		attribute.Key("reg").String(up.Reg),
 		attribute.Key("repo").String(up.Repo),
 		attribute.Key("tag").String(up.Tag),
-		attribute.Key("cfg").String(utils.ShortenDigest(cfg.Digest)),
+		attribute.Key("cfg").String(utils.ShortenDigest(up.Digest.String())),
 	)
 	defer span.End()
-	_, err = m.ConfigsStatObj(ctx, cfg.Digest)
+	_, err = m.ConfigsStatObj(ctx, up.Digest.String())
 	if err != nil {
 		if err.Error() == "The specified key does not exist." {
 			return res, false, nil
 		}
+		err = errors.Wrap(err, "failed to stat config")
 		l.Error(err)
 		return
 	} else {
 		isCached = true
-		res, err = m.ConfigGetObj(ctx, cfg.Digest)
+		res, err = m.ConfigGetObj(ctx, up.Digest.String())
 		if err != nil {
+			err = errors.Wrap(err, "failed to get config")
 			l.Error(err)
 			return
 		}
@@ -61,13 +63,13 @@ func (m Minio) ConfigGetBytes(ctx context.Context, path string) (b []byte, err e
 	cli := m.BucketConfig[configsBucketKey].Client
 	obj, err := cli.GetObject(ctx, m.GetConfigsBucketName(), path, minio.GetObjectOptions{})
 	if err != nil {
-		logrus.Errorf("Error getting manifest: %s", err)
+		logrus.Errorf("Error getting config: %s", err)
 		return
 	}
 	defer obj.Close()
 	b, e := io.ReadAll(obj)
 	if e != nil {
-		err = errors.Wrap(e, "failed to read manifest")
+		err = errors.Wrap(e, "failed to read config")
 		logrus.Fatal(err)
 	}
 	return
@@ -79,10 +81,9 @@ func (m Minio) ConfigGetObj(ctx context.Context, path string) (cfg types.Config,
 		"func":    "ConfigGetObj",
 		"path":    path,
 	})
-	_ = l
 	b, err := m.ConfigGetBytes(ctx, path)
 	if err != nil {
-		logrus.Error(err)
+		l.Error(err)
 		return cfg, err
 	}
 
@@ -135,4 +136,19 @@ func ConfigFromCfgBlob(blob []byte) (cfg types.Config, err error) {
 
 func (m Minio) configGetter(bi imgTypes.BlobInfo) (b []byte, err error) {
 	return m.ConfigGetBytes(context.Background(), bi.Digest.String())
+}
+
+func (m Minio) ConfigRemoveObj(ctx context.Context, object string) (err error) {
+	cli := m.BucketConfig[configsBucketKey].Client
+	return cli.RemoveObject(ctx, m.GetConfigsBucketName(), object, minio.RemoveObjectOptions{})
+}
+
+func (m Minio) ConfigsStatObj(ctx context.Context, object string) (obj minio.ObjectInfo, err error) {
+	bucket := m.GetConfigsBucketName()
+	cli := m.BucketConfig[configsBucketKey].Client
+	return cli.StatObject(ctx, bucket, object, minio.StatObjectOptions{})
+}
+
+func (m Minio) GetConfigsBucketName() string {
+	return m.BucketConfig[configsBucketKey].Bucket
 }
