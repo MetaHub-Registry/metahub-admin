@@ -61,6 +61,7 @@ func uParseCmd(cmd *cobra.Command, args []string) {
 			FirstName: user.FirstName,
 			LastName:  user.LastName,
 			Email:     user.Email,
+			Role:      user.Role,
 		}
 		switch {
 		case (user.Hash != "") && (user.Password != ""):
