@@ -12,10 +12,14 @@ elif [[ -f ~/.aws/credentials ]];then
 	export AWS_SECRET_ACCESS_KEY=$(cat ~/.aws/credentials |wildq -M --ini '.s3.aws_secret_access_key')
 fi
 
+if [[ -f /run/secrets/neo4j-url ]];then
+	export NEO4J_URL=$(cat /run/secrets/neo4j-url)
+else 
+	echo "WARN: No NEO4J_URL found (/run/secrets/neo4j-url), expect 'neo4j' to be available locally"
+	NEO4J_URL=bolt://neo4j:7687
+fi
 ## Setup metahub-admin config
 TMP_DIR=$(mktemp -d -t ci-XXXXXXXXXX)
-
-NEO4J_URL=bolt://portainer-swarm.fritz.box:17687
 cat misc/config/metahub-admin.yaml \
 	|wildq -M -i yaml '.minio.user = "AWSUSER"' |sed -e "s/AWSUSER/${AWS_ACCESS_KEY}/"  \
 	|wildq -M -i yaml '.minio.password = "PASSWD"' |sed -e "s#PASSWD#${AWS_SECRET_ACCESS_KEY}#"  \
@@ -27,10 +31,6 @@ cat misc/config/metahub-admin.yaml \
 	|wildq -M -i yaml '.minio.ssl = true' \
 	|wildq -M -i yaml '.neo4j.url = "NEOURL"' |sed -e "s#NEOURL#${NEO4J_URL}#" \
 	> ${TMP_DIR}/metahub-admin.yaml
-
-
-
-
 
 git clone https://gitlab.com/qnib-metahub/community-edition.git ${TMP_DIR}/community-edition
 ## Minio Ops
