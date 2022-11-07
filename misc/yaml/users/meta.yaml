@@ -1,3 +1,6 @@
 username: meta
 password: hub
 role: user
+email: meta@hub.org
+first_name: Metahub
+last_name: User
