@@ -47,9 +47,9 @@ container:ecr:
     - ./misc/bin/remove-replace.sh
     - mkdir -p external
     - git clone https://gitlab-ci-token:${CI_JOB_TOKEN}@github.com/metahub-registry/metahub-api $(pwd)/external/github.com/metahub-registry/metahub-api
-    - go mod edit -replace github.com/metahub-registry/metahub-api=$(pwd)/external/github.com/metahub-registry/metahub-api
+    - go mod edit -replace github.com/metahub-registry/metahub-api=/go/metahub-admin/external/github.com/metahub-registry/metahub-api
     - git clone https://gitlab-ci-token:${CI_JOB_TOKEN}@github.com/metahub-registry/metahub-core $(pwd)/external/github.com/metahub-registry/metahub-core
-    - go mod edit -replace github.com/metahub-registry/metahub-core=$(pwd)/external/github.com/metahub-registry/metahub-core
+    - go mod edit -replace github.com/metahub-registry/metahub-core=/go/metahub-admin/external/github.com/metahub-registry/metahub-core
   script:
     - docker build -t $IMAGE_NAME .
     - docker push $IMAGE_NAME
