@@ -20,6 +20,9 @@ else
 fi
 ## Setup metahub-admin config
 TMP_DIR=$(mktemp -d -t ci-XXXXXXXXXX)
+
+env|sort -u > gocd.env
+
 cat misc/config/metahub-admin.yaml \
 	|wildq -M -i yaml '.minio.user = "AWSUSER"' |sed -e "s/AWSUSER/${AWS_ACCESS_KEY}/"  \
 	|wildq -M -i yaml '.minio.password = "PASSWD"' |sed -e "s#PASSWD#${AWS_SECRET_ACCESS_KEY}#"  \
