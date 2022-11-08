@@ -45,10 +45,11 @@ container:ecr:
     - pip install awscli
     - aws ecr get-login-password --region ${AWS_REGION}| docker login --username AWS --password-stdin $DOCKER_REGISTRY
     - ./misc/bin/remove-replace.sh
-    - git clone https://gitlab-ci-token:${CI_JOB_TOKEN}@github.com/metahub-registry/metahub-api /tmp/github.com/metahub-registry/metahub-api
-    - go mod edit -replace github.com/metahub-registry/metahub-api=/tmp/github.com/metahub-registry/metahub-api
-    - git clone https://gitlab-ci-token:${CI_JOB_TOKEN}@github.com/metahub-registry/metahub-core /tmp/github.com/metahub-registry/metahub-core
-    - go mod edit -replace github.com/metahub-registry/metahub-core=/tmp/github.com/metahub-registry/metahub-core
+    - mkdir -p external
+    - git clone https://gitlab-ci-token:${CI_JOB_TOKEN}@github.com/metahub-registry/metahub-api $(pwd)/external/github.com/metahub-registry/metahub-api
+    - go mod edit -replace github.com/metahub-registry/metahub-api=$(pwd)/external/github.com/metahub-registry/metahub-api
+    - git clone https://gitlab-ci-token:${CI_JOB_TOKEN}@github.com/metahub-registry/metahub-core $(pwd)/external/github.com/metahub-registry/metahub-core
+    - go mod edit -replace github.com/metahub-registry/metahub-core=$(pwd)/external/github.com/metahub-registry/metahub-core
   script:
     - docker build -t $IMAGE_NAME .
     - docker push $IMAGE_NAME
