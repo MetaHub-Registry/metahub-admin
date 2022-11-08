@@ -44,10 +44,10 @@ container:ecr:
     - apk add --no-cache curl jq python3 py3-pip git go
     - pip install awscli
     - aws ecr get-login-password --region ${AWS_REGION}| docker login --username AWS --password-stdin $DOCKER_REGISTRY
-    - git clone https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.com/qnib-golang/metahub ./ext/gitlab.com/qnib-golang/metahub
-    - go mod edit -replace gitlab.com/qnib-golang/metahub=/go/metahub-admin/ext/gitlab.com/qnib-golang/metahub       
     - git clone https://gitlab-ci-token:${CI_JOB_TOKEN}@github.com/metahub-registry/metahub-api ./ext/github.com/metahub-registry/metahub-api
     - go mod edit -replace github.com/metahub-registry/metahub-api=/go/metahub-admin/ext/github.com/metahub-registry/metahub-api
+    - git clone https://gitlab-ci-token:${CI_JOB_TOKEN}@github.com/metahub-registry/metahub-core /tmp/github.com/metahub-registry/metahub-core
+    - go mod edit -replace github.com/metahub-registry/metahub-core=/tmp/github.com/metahub-registry/metahub-core
   script:
     - docker build -t $IMAGE_NAME .
     - docker push $IMAGE_NAME
