@@ -1,3 +1,3 @@
 #!/bin/bash
 
-docker-compose -f docker-compose-data.yaml down -v
+docker-compose -p admin-stack -f docker-compose-data.yaml down -v
