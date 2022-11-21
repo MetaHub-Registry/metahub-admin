@@ -14,11 +14,11 @@ env|sort -u > gocd.env
 
 gonja-cli misc/tpl/metahub-admin.yaml.tpl ${TMP_DIR}/metahub-admin.yaml
 ## Minio Ops
-metahub-admin parse --config ${TMP_DIR}/metahub-admin.yaml manifests --remove-manifests-alias  ./misc/yaml/manifests
+metahub-admin parse --config ${TMP_DIR}/metahub-admin.yaml manifests --remove-manifests-alias  ./misc/yaml/manifests/qnib
 
 ## Neo4j Ops
 metahub-admin parse --config ${TMP_DIR}/metahub-admin.yaml profiles  --empty-graph ./misc/yaml/profiles
-metahub-admin parse --config ${TMP_DIR}/metahub-admin.yaml collections ./misc/yaml/manifests
+metahub-admin parse --config ${TMP_DIR}/metahub-admin.yaml collections ./misc/yaml/manifests/qnib
 metahub-admin --config ${TMP_DIR}/metahub-admin.yaml compute manifestlists
 
 echo "#### Create SQLite DB"
