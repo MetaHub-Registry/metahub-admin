@@ -10,6 +10,8 @@ if [[ ! -f test.env ]];then
 	exit 1
 fi
 source test.env
+export MINIO_URL=${MINIO_URL:-http://localhost:9000}
+export NEO4J_URL=${NEO4J_URL:-http://localhost:7687}
 
 env|sort -u > gocd-${GO_STAGE_NAME:-test}.env
 
