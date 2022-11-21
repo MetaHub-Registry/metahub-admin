@@ -1,4 +1,5 @@
 #!/bin/bash
+set -e
 
 function getMinioPort() {
     CNT_NAME=$(docker ps|awk '/stack.*minio/{print $NF}')
@@ -96,3 +97,5 @@ NEO_BOLT_PORT=$(getNeo4jBoltPort)
 
 checkMinioHealth
 checkNeo4jHealth
+echo "NEO4J_URL=bolt://localhost:${NEO_BOLT_PORT}" > test.env
+echo "MINIO_URL=localhost:${MINIO_PORT}" >> test.env
