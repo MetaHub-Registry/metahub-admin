@@ -11,7 +11,7 @@ if [[ ! -f test.env ]];then
 fi
 source test.env
 
-env|sort -u > gocd.env
+env|sort -u > gocd-${GO_STAGE_NAME:-test}.env
 
 if [[ ! -x {TOPDIR}/metahub-admin ]];then
 	echo "WARN: No metahub-admin found"

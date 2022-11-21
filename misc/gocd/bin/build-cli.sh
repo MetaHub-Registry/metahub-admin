@@ -1,5 +1,7 @@
 #!/bin/bash
 
+env|sort -u > gocd-${GO_STAGE_NAME:-build}.env
+
 cat go.mod|awk '!/^replace/' > go.mod.tmp
 mv go.mod.tmp go.mod
 
