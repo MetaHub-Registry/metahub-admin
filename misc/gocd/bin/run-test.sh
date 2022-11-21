@@ -16,6 +16,7 @@ export NEO4J_URL=${NEO4J_URL:-http://localhost:7687}
 
 env|sort -u > gocd-${GO_STAGE_NAME:-test}.env
 
+source ~/gocd.env
 
 ## Fetch Artefact
 curl -sH "Authorization: bearer ${GOCD_TOKEN}" \
