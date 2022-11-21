@@ -12,7 +12,7 @@ source test.env
 
 env|sort -u > gocd.env
 
-gonja-cli misc/tpl/metahub-admin.yaml.tpl ${TMP_DIR}/metahub-admin.yaml
+gonja-cli ../../tpl/metahub-admin.yaml.tpl ${TMP_DIR}/metahub-admin.yaml
 ## Minio Ops
 metahub-admin parse --config ${TMP_DIR}/metahub-admin.yaml manifests --remove-manifests-alias  ./misc/yaml/manifests/qnib
 
