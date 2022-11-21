@@ -20,15 +20,15 @@ fi
 
 gonja-cli ${TOPDIR}/misc/tpl/metahub-admin.yaml.tpl ${TMP_DIR}/metahub-admin.yaml
 ## Minio Ops
-~/bin/metahub-admin-${GO_PIPELINE_COUNTER} parse --config ${TMP_DIR}/metahub-admin.yaml manifests --remove-manifests-alias  ./misc/yaml/manifests/qnib
+~/bin/metahub-admin-${GO_PIPELINE_COUNTER} parse --config ${TMP_DIR}/metahub-admin.yaml manifests --remove-manifests-alias  ${TOPDIR}/misc/yaml/manifests/qnib
 
 ## Neo4j Ops
-~/bin/metahub-admin-${GO_PIPELINE_COUNTER} parse --config ${TMP_DIR}/metahub-admin.yaml profiles  --empty-graph ./misc/yaml/profiles
-~/bin/metahub-admin-${GO_PIPELINE_COUNTER} parse --config ${TMP_DIR}/metahub-admin.yaml collections ./misc/yaml/manifests/qnib
+~/bin/metahub-admin-${GO_PIPELINE_COUNTER} parse --config ${TMP_DIR}/metahub-admin.yaml profiles  --empty-graph ${TOPDIR}/misc/yaml/profiles
+~/bin/metahub-admin-${GO_PIPELINE_COUNTER} parse --config ${TMP_DIR}/metahub-admin.yaml collections ${TOPDIR}/misc/yaml/manifests/qnib
 ~/bin/metahub-admin-${GO_PIPELINE_COUNTER} --config ${TMP_DIR}/metahub-admin.yaml compute manifestlists
 
 echo "#### Create SQLite DB"
 DBFILE=./metahub.db
-~/bin/metahub-admin-${GO_PIPELINE_COUNTER} --config ${TMP_DIR}/metahub-admin.yaml parse users --metahub-db=${DBFILE} ./misc/yaml/users
+~/bin/metahub-admin-${GO_PIPELINE_COUNTER} --config ${TMP_DIR}/metahub-admin.yaml parse users --metahub-db=${DBFILE} ${TOPDIR}/misc/yaml/users
 ~/bin/metahub-admin-${GO_PIPELINE_COUNTER} --config ${TMP_DIR}/metahub-admin.yaml sqlite --metahub-db=${DBFILE}
 rm -rf ${TMP_DIR}
