@@ -1,5 +1,4 @@
 #!/bin/bash
-set -e
 
 function getMinioPort() {
     CNT_NAME=$(docker ps|awk '/stack.*minio/{print $NF}')
