@@ -8,8 +8,7 @@ TMP_DIR=$(mktemp -d -t ci-XXXXXXXXXX)
 ## Fetch Artefact
 source ~/gocd.env
 curl -sH "Authorization: bearer ${GOCD_TOKEN}" \
-     -o test.env "${GO_SERVER_URL}/files/${GO_PIPELINE_NAME}/${GO_PIPELINE_COUNTER}/${GO_STAGE_NAME}/${GO_STAGE_COUNTER}/Deploy/Setup/misc/gocd/bin/test.env"
-
+     -o test.env "${GO_SERVER_URL}/files/${GO_PIPELINE_NAME}/${GO_PIPELINE_COUNTER}/Deploy/1/Setup/misc/gocd/bin/test.env"
 source test.env
 
 export MINIO_URL=${MINIO_URL:-http://localhost:9000}
@@ -17,7 +16,7 @@ export NEO4J_URL=${NEO4J_URL:-http://localhost:7687}
 
 ## Fetch Artefact
 curl -sH "Authorization: bearer ${GOCD_TOKEN}" \
-     -o metahub-admin "${GO_SERVER_URL}/files/${GO_PIPELINE_NAME}/${GO_PIPELINE_COUNTER}/${GO_STAGE_NAME}/${GO_STAGE_COUNTER}/Build/Go/metahub-admin"
+     -o metahub-admin "${GO_SERVER_URL}/files/${GO_PIPELINE_NAME}/${GO_PIPELINE_COUNTER}/Build/1/Go/metahub-admin"
 chmod +x metahub-admin
 
 gonja-cli ${TOPDIR}/misc/tpl/metahub-admin.yaml.tpl ${TMP_DIR}/metahub-admin.yaml
