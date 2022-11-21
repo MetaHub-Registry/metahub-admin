@@ -48,7 +48,6 @@ function getNeo4jHttpPort() {
     echo ${NEO_HTTP_PORT}
 }
 
-
 function checkMinioHealth() {
     MINIO_PORT=$(getMinioPort)
     N=0
@@ -87,7 +86,6 @@ function checkNeo4jHealth() {
     echo "-> Neo4j is healthy"
 }
 
-
 docker-compose -p admin-stack -f docker-compose-data.yaml up -d
 sleep 3
 
@@ -98,5 +96,5 @@ NEO_BOLT_PORT=$(getNeo4jBoltPort)
 checkMinioHealth
 checkNeo4jHealth
 mkdir -p ~/env/
-echo "NEO4J_URL=bolt://localhost:${NEO_BOLT_PORT}" > ~/env/test-${GO_PIPELINE_COUNTER}.env
-echo "MINIO_URL=localhost:${MINIO_PORT}" >> ~/env/test-${GO_PIPELINE_COUNTER}.env
+echo "NEO4J_URL=bolt://localhost:${NEO_BOLT_PORT}" > test.env
+echo "MINIO_URL=localhost:${MINIO_PORT}" >> test.env
