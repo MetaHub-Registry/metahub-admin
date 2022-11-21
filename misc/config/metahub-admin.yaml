@@ -1,5 +1,5 @@
 minio:
-  url: localhost:9000
+  url: minio:9000
   region: us-east-1
   user: minio 
   password: miniominio
@@ -16,4 +16,4 @@ neo4j:
   dbname: neo4j
   user: neo4j
   password: test
-  url: bolt://localhost:7687
+  url: bolt://neo4j:7687

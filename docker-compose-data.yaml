@@ -3,8 +3,8 @@ services:
   minio:
     image: quay.io/minio/minio
     ports:
-      - 9000:9000
-      - 9001:9001
+      - 19000:9000
+      - 19001:9001
     networks:
      - mh-data
     volumes:
@@ -15,9 +15,11 @@ services:
     command: ["server", "/data", "--console-address=0.0.0.0:9001"]
   neo4j:
     image: neo4j:4.4.9
+    container_name: neo4j
+    hostname: neo4j
     ports:
-      - 7474:7474
-      - 7687:7687
+      - 17474:7474
+      - 17687:7687
     networks:
      - mh-data
     environment:
