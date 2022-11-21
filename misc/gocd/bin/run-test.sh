@@ -16,20 +16,20 @@ export NEO4J_URL=${NEO4J_URL:-http://localhost:7687}
 
 ## Fetch Artefact
 curl -sH "Authorization: bearer ${GOCD_TOKEN}" \
-     -o metahub-admin "${GO_SERVER_URL}/files/${GO_PIPELINE_NAME}/${GO_PIPELINE_COUNTER}/Build/1/Go/metahub-admin"
-chmod +x metahub-admin
+     -o ./metahub-admin "${GO_SERVER_URL}/files/${GO_PIPELINE_NAME}/${GO_PIPELINE_COUNTER}/Build/1/Go/metahub-admin"
+chmod +x ./metahub-admin
 
 gonja-cli ${TOPDIR}/misc/tpl/metahub-admin.yaml.tpl ${TMP_DIR}/metahub-admin.yaml
 ## Minio Ops
-metahub-admin parse --config ${TMP_DIR}/metahub-admin.yaml manifests --remove-manifests-alias  ${TOPDIR}/misc/yaml/manifests/qnib
+./metahub-admin parse --config ${TMP_DIR}/metahub-admin.yaml manifests --remove-manifests-alias  ${TOPDIR}/misc/yaml/manifests/qnib
 
 ## Neo4j Ops
-metahub-admin parse --config ${TMP_DIR}/metahub-admin.yaml profiles  --empty-graph ${TOPDIR}/misc/yaml/profiles
-metahub-admin parse --config ${TMP_DIR}/metahub-admin.yaml collections ${TOPDIR}/misc/yaml/manifests/qnib
-metahub-admin --config ${TMP_DIR}/metahub-admin.yaml compute manifestlists
+./metahub-admin parse --config ${TMP_DIR}/metahub-admin.yaml profiles  --empty-graph ${TOPDIR}/misc/yaml/profiles
+./metahub-admin parse --config ${TMP_DIR}/metahub-admin.yaml collections ${TOPDIR}/misc/yaml/manifests/qnib
+./metahub-admin --config ${TMP_DIR}/metahub-admin.yaml compute manifestlists
 
 echo "#### Create SQLite DB"
 DBFILE=./metahub.db
-metahub-admin --config ${TMP_DIR}/metahub-admin.yaml parse users --metahub-db=${DBFILE} ${TOPDIR}/misc/yaml/users
-metahub-admin --config ${TMP_DIR}/metahub-admin.yaml sqlite --metahub-db=${DBFILE}
+./metahub-admin --config ${TMP_DIR}/metahub-admin.yaml parse users --metahub-db=${DBFILE} ${TOPDIR}/misc/yaml/users
+./metahub-admin --config ${TMP_DIR}/metahub-admin.yaml sqlite --metahub-db=${DBFILE}
 rm -rf ${TMP_DIR}
