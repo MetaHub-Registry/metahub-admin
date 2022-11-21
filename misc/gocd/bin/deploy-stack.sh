@@ -37,8 +37,8 @@ function getNeo4jHttpPort() {
     NEO_HTTP_PORT=$(docker inspect ${CNT_NAME} |jq -r '.[] |.NetworkSettings.Ports."7474/tcp"[].HostPort' |head -n1)
     N=0
     if [[ -z ${NEO_HTTP_PORT} ]];then
-        if [[ ${N} -gt 20 ]];then
-            echo "ERROR: Exhausted Minio health check retries"
+        if [[ ${N} -gt 30 ]];then
+            echo "ERROR: Exhausted Neo4j health check retries"
             exit 1
         fi
         N=$((N+1))
@@ -89,6 +89,8 @@ function checkNeo4jHealth() {
 
 
 docker-compose -p admin-stack -f docker-compose-data.yaml up -d
+sleep 3
+
 MINIO_PORT=$(getMinioPort)
 NEO_HTTP_PORT=$(getNeo4jHttpPort)
 NEO_BOLT_PORT=$(getNeo4jBoltPort)
