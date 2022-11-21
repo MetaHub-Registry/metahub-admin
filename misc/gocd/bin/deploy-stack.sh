@@ -97,5 +97,6 @@ NEO_BOLT_PORT=$(getNeo4jBoltPort)
 
 checkMinioHealth
 checkNeo4jHealth
-echo "NEO4J_URL=bolt://localhost:${NEO_BOLT_PORT}" > test.env
-echo "MINIO_URL=localhost:${MINIO_PORT}" >> test.env
+mkdir -p ~/env/
+echo "NEO4J_URL=bolt://localhost:${NEO_BOLT_PORT}" > ~/env/test-${GO_PIPELINE_COUNTER}.env
+echo "MINIO_URL=localhost:${MINIO_PORT}" >> ~/env/test-${GO_PIPELINE_COUNTER}.env

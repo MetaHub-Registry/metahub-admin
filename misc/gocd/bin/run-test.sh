@@ -5,11 +5,12 @@ TOPDIR=$(git rev-parse --show-toplevel)
 ## Setup metahub-admin config
 TMP_DIR=$(mktemp -d -t ci-XXXXXXXXXX)
 
-if [[ ! -f test.env ]];then
-	echo "WARN: No test.env found"
+if [[ ! -f ~/env/test-${GO_PIPELINE_COUNTER}.env ]];then
+	echo "WARN: No ~/env/test-${GO_PIPELINE_COUNTER}.env found"
 	exit 1
 fi
-source test.env
+source ~/env/test-${GO_PIPELINE_COUNTER}.env
+
 export MINIO_URL=${MINIO_URL:-http://localhost:9000}
 export NEO4J_URL=${NEO4J_URL:-http://localhost:7687}
 
