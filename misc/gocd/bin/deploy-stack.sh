@@ -37,8 +37,8 @@ function getNeo4jHttpPort() {
     NEO_HTTP_PORT=$(docker inspect ${CNT_NAME} |jq -r '.[] |.NetworkSettings.Ports."7474/tcp"[].HostPort' |head -n1)
     N=0
     if [[ -z ${NEO_HTTP_PORT} ]];then
-        if [[ ${N} -gt 10 ]];then
-            echo "ERROR: Could not find Neo port"
+        if [[ ${N} -gt 20 ]];then
+            echo "ERROR: Exhausted Minio health check retries"
             exit 1
         fi
         N=$((N+1))
@@ -52,18 +52,17 @@ function getNeo4jHttpPort() {
 function checkMinioHealth() {
     MINIO_PORT=$(getMinioPort)
     N=0
-    curl -s http://localhost:${MINIO_PORT}/minio/health/live
     echo -n "Check Minio health endpoint: "
-
+    curl -s http://localhost:${MINIO_PORT}/minio/health/live
     while [[ $? -ne 0 ]];do
         if [[ ${N} -gt 10 ]];then
-            echo "ERROR: Could not find Neo port"
+            echo "ERROR: Exhausted Minio health check retries"
             exit 1
         fi
         N=$((N+1))
         sleep 1
-        curl -s http://localhost:${MINIO_PORT}/minio/health/live
         echo -n "."
+        curl -s http://localhost:${MINIO_PORT}/minio/health/live
     done
     echo ""
     echo "-> Minio is healthy"
@@ -72,8 +71,8 @@ function checkMinioHealth() {
 function checkNeo4jHealth() {
     NEO_HTTP_PORT=$(getNeo4jHttpPort)
     N=0
-    curl -s http://localhost:${NEO_HTTP_PORT} >>/dev/null
     echo -n "Check Neo4j HTTP health endpoint: "
+    curl -s http://localhost:${NEO_HTTP_PORT} >>/dev/null
     while [[ $? -ne 0 ]];do
         if [[ ${N} -gt 10 ]];then
             echo "ERROR: Could not find Neo port"
@@ -81,8 +80,8 @@ function checkNeo4jHealth() {
         fi
         N=$((N+1))
         sleep 1
-        curl -s http://localhost:${NEO_HTTP_PORT} >>/dev/null
         echo -n "."
+        curl -s http://localhost:${NEO_HTTP_PORT} >>/dev/null
     done
     echo ""
     echo "-> Neo4j is healthy"
