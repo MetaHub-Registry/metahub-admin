@@ -2,7 +2,7 @@
 
 function getMinioPort() {
     CNT_NAME=$(docker ps|awk '/stack.*minio/{print $NF}')
-    MINIO_PORT=$(docker inspect ${CNT_NAME} |jq -r '.[] |.NetworkSettings.Ports."9000/tcp"[]|.HostPort')
+    MINIO_PORT=$(docker inspect ${CNT_NAME} |jq -r '.[] |.NetworkSettings.Ports."9000/tcp"[]|.HostPort' |head -n1)
     N=0
     if [[ -z ${MINIO_PORT} ]];then
         if [[ ${N} -gt 10 ]];then
@@ -11,14 +11,14 @@ function getMinioPort() {
         fi
         N=$((N+1))
         sleep 1
-        MINIO_PORT=$(docker inspect ${CNT_NAME} |jq -r '.[] |.NetworkSettings.Ports."9000/tcp"[]|.HostPort')   
+        MINIO_PORT=$(docker inspect ${CNT_NAME} |jq -r '.[] |.NetworkSettings.Ports."9000/tcp"[]|.HostPort' |head -n1)   
     fi
     echo ${MINIO_PORT}
 }
 
 function getNeo4jBoltPort() {
     CNT_NAME=$(docker ps|awk '/stack.*neo4j/{print $NF}')
-    NEO_PORT=$(docker inspect ${CNT_NAME} |jq -r '.[] |.NetworkSettings.Ports."7687/tcp"[].HostPort')
+    NEO_PORT=$(docker inspect ${CNT_NAME} |jq -r '.[] |.NetworkSettings.Ports."7687/tcp"[].HostPort' |head -n1)
     N=0
     if [[ -z ${NEO_PORT} ]];then
         if [[ ${N} -gt 10 ]];then
@@ -27,14 +27,14 @@ function getNeo4jBoltPort() {
         fi
         N=$((N+1))
         sleep 1
-        NEO_PORT=$(docker inspect ${CNT_NAME} |jq -r '.[] |.NetworkSettings.Ports."7687/tcp"[].HostPort')   
+        NEO_PORT=$(docker inspect ${CNT_NAME} |jq -r '.[] |.NetworkSettings.Ports."7687/tcp"[].HostPort' |head -n1)   
     fi
     echo ${NEO_PORT}
 }
 
 function getNeo4jHttpPort() {
     CNT_NAME=$(docker ps|awk '/stack.*neo4j/{print $NF}')
-    NEO_HTTP_PORT=$(docker inspect ${CNT_NAME} |jq -r '.[] |.NetworkSettings.Ports."7474/tcp"[].HostPort')
+    NEO_HTTP_PORT=$(docker inspect ${CNT_NAME} |jq -r '.[] |.NetworkSettings.Ports."7474/tcp"[].HostPort' |head -n1)
     N=0
     if [[ -z ${NEO_HTTP_PORT} ]];then
         if [[ ${N} -gt 10 ]];then
@@ -43,7 +43,7 @@ function getNeo4jHttpPort() {
         fi
         N=$((N+1))
         sleep 1
-        NEO_HTTP_PORT=$(docker inspect ${CNT_NAME} |jq -r '.[] |.NetworkSettings.Ports."7474/tcp"[].HostPort')   
+        NEO_HTTP_PORT=$(docker inspect ${CNT_NAME} |jq -r '.[] |.NetworkSettings.Ports."7474/tcp"[].HostPort' |head -n1)   
     fi
     echo ${NEO_HTTP_PORT}
 }
