@@ -12,6 +12,12 @@ services:
       MINIO_ROOT_USER: "minio"
       MINIO_ROOT_PASSWORD: "miniominio"
     command: ["server", "/data", "--console-address=0.0.0.0:9001"]
+  backup:
+    image: alpine:3.16.2
+    volumes:
+      - minio:/minio
+      - ./backup:/backup
+    command: ["sleep", "infinity"]
   neo4j:
     image: neo4j:4.4.9
     ports:
