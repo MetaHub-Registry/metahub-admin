@@ -74,8 +74,8 @@ function checkNeo4jHealth() {
     echo -n "Check Neo4j HTTP health endpoint: "
     curl -s http://localhost:${NEO_HTTP_PORT} >>/dev/null
     while [[ $? -ne 0 ]];do
-        if [[ ${N} -gt 10 ]];then
-            echo "ERROR: Could not find Neo port"
+        if [[ ${N} -gt 30 ]];then
+            echo "ERROR: Neo4j health check exhausted retries"
             exit 1
         fi
         N=$((N+1))
