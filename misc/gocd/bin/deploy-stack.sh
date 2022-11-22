@@ -1,4 +1,5 @@
 #!/bin/bash
+#!/bin/bash
 
 function getMinioPort() {
     CNT_NAME=$(docker ps|awk '/stack.*minio/{print $NF}')
@@ -86,7 +87,6 @@ function checkNeo4jHealth() {
     echo "-> Neo4j is healthy"
 }
 
-mkdir -p ./backup
 docker-compose -p admin-stack -f docker-compose-data.yaml up -d
 sleep 3
 

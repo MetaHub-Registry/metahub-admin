@@ -16,7 +16,7 @@ services:
     image: alpine:3.16.2
     volumes:
       - minio:/minio
-      - ./backup:/backup
+      - ./:/backup
     command: ["sleep", "infinity"]
   neo4j:
     image: neo4j:4.4.9
