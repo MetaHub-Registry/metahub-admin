@@ -7,8 +7,10 @@ TMP_DIR=$(mktemp -d -t ci-XXXXXXXXXX)
 
 ## Fetch Artefact
 source ~/gocd.env
-curl -sH "Authorization: bearer ${GOCD_TOKEN}" \
+if [[ ! -f test.env ]];then
+  curl -sH "Authorization: bearer ${GOCD_TOKEN}" \
      -o test.env "${GO_SERVER_URL}/files/${GO_PIPELINE_NAME}/${GO_PIPELINE_COUNTER}/Deploy/1/Setup/misc/gocd/bin/test.env"
+fi
 source test.env
 
 export MINIO_URL=${MINIO_URL:-http://localhost:9000}
