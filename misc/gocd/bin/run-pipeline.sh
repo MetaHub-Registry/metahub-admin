@@ -20,6 +20,7 @@ else
 fi
 ## Setup metahub-admin config
 TMP_DIR=$(mktemp -d -t ci-XXXXXXXXXX)
+TOPDIR=$(git rev-parse --show-toplevel)
 
 env|sort -u > gocd.env
 
@@ -37,16 +38,16 @@ cat misc/config/metahub-admin.yaml \
 
 git clone https://gitlab.com/qnib-metahub/community-edition.git ${TMP_DIR}/community-edition
 ## Minio Ops
-metahub-admin parse --config ${TMP_DIR}/metahub-admin.yaml manifests --remove-manifests-alias  ${TMP_DIR}/community-edition/manifests
+${TOPDIR}/metahub-admin parse --config ${TMP_DIR}/metahub-admin.yaml manifests --remove-manifests-alias  ${TMP_DIR}/community-edition/manifests
 
 ## Neo4j Ops
-metahub-admin parse --config ${TMP_DIR}/metahub-admin.yaml profiles  --empty-graph ${TMP_DIR}/community-edition/profiles
-metahub-admin parse --config ${TMP_DIR}/metahub-admin.yaml collections ${TMP_DIR}/community-edition/manifests
-metahub-admin --config ${TMP_DIR}/metahub-admin.yaml compute manifestlists
+${TOPDIR}/metahub-admin parse --config ${TMP_DIR}/metahub-admin.yaml profiles  --empty-graph ${TMP_DIR}/community-edition/profiles
+${TOPDIR}/metahub-admin parse --config ${TMP_DIR}/metahub-admin.yaml collections ${TMP_DIR}/community-edition/manifests
+${TOPDIR}/metahub-admin --config ${TMP_DIR}/metahub-admin.yaml compute manifestlists
 
 echo "#### Create SQLite DB"
 DBFILE=./metahub.db
 cp -r ./misc/yaml/users ${TMP_DIR}/community-edition/users
-metahub-admin --config ${TMP_DIR}/metahub-admin.yaml parse users --metahub-db=${DBFILE} ./misc/yaml/users
-metahub-admin --config ${TMP_DIR}/metahub-admin.yaml sqlite --metahub-db=${DBFILE}
+${TOPDIR}/metahub-admin --config ${TMP_DIR}/metahub-admin.yaml parse users --metahub-db=${DBFILE} ./misc/yaml/users
+${TOPDIR}/metahub-admin --config ${TMP_DIR}/metahub-admin.yaml sqlite --metahub-db=${DBFILE}
 rm -rf ${TMP_DIR}
