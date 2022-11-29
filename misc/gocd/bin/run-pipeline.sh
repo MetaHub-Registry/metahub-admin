@@ -23,19 +23,6 @@ TMP_DIR=$(mktemp -d -t ci-XXXXXXXXXX)
 TOPDIR=$(git rev-parse --show-toplevel)
 
 env|sort -u > gocd.env
-
-cat misc/config/metahub-admin.yaml \
-	|wildq -M -i yaml '.minio.user = "AWSUSER"' |sed -e "s/AWSUSER/${AWS_ACCESS_KEY}/"  \
-	|wildq -M -i yaml '.minio.password = "PASSWD"' |sed -e "s#PASSWD#${AWS_SECRET_ACCESS_KEY}#"  \
-	|wildq -M -i yaml '.minio.region = "eu-west-1"' \
-	|wildq -M -i yaml '.minio.url = "s3.amazonaws.com"' \
-	|wildq -M -i yaml '.minio.configs.bucket = "metahub-prod-configs"' \
-	|wildq -M -i yaml '.minio.layers.bucket = "metahub-prod-layers"' \
-	|wildq -M -i yaml '.minio.manifests.bucket = "metahub-prod-manifests"' \
-	|wildq -M -i yaml '.minio.ssl = true' \
-	|wildq -M -i yaml '.neo4j.url = "NEOURL"' |sed -e "s#NEOURL#${NEO4J_URL}#" \
-	> ${TMP_DIR}/metahub-admin.yaml
-
 ## Fetch Artefact
 source ~/gocd.env
 curl -sH "Authorization: bearer ${GOCD_TOKEN}" \
@@ -49,7 +36,6 @@ export MINIO_URL=${MINIO_URL:-http://localhost:9000}
 export NEO4J_URL=${NEO4J_URL:-http://localhost:7687}
 gonja-cli ${TOPDIR}/misc/tpl/metahub-admin.yaml.tpl ${TMP_DIR}/metahub-admin.yaml
 ## Minio Ops
-
 ./metahub-admin parse --config ${TMP_DIR}/metahub-admin.yaml manifests --remove-manifests-alias  ${TMP_DIR}/community-edition/manifests
 
 ## Neo4j Ops
