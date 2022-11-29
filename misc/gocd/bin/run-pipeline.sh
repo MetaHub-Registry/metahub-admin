@@ -36,18 +36,24 @@ cat misc/config/metahub-admin.yaml \
 	|wildq -M -i yaml '.neo4j.url = "NEOURL"' |sed -e "s#NEOURL#${NEO4J_URL}#" \
 	> ${TMP_DIR}/metahub-admin.yaml
 
+## Fetch Artefact
+source ~/gocd.env
+curl -sH "Authorization: bearer ${GOCD_TOKEN}" \
+     -o ./metahub-admin "${GO_SERVER_URL}/files/${GO_PIPELINE_NAME}/${GO_PIPELINE_COUNTER}/Build/1/Go/metahub-admin"
+chmod +x ./metahub-admin
+
 git clone https://gitlab.com/qnib-metahub/community-edition.git ${TMP_DIR}/community-edition
 ## Minio Ops
-${TOPDIR}/metahub-admin parse --config ${TMP_DIR}/metahub-admin.yaml manifests --remove-manifests-alias  ${TMP_DIR}/community-edition/manifests
+./metahub-admin parse --config ${TMP_DIR}/metahub-admin.yaml manifests --remove-manifests-alias  ${TMP_DIR}/community-edition/manifests
 
 ## Neo4j Ops
-${TOPDIR}/metahub-admin parse --config ${TMP_DIR}/metahub-admin.yaml profiles  --empty-graph ${TMP_DIR}/community-edition/profiles
-${TOPDIR}/metahub-admin parse --config ${TMP_DIR}/metahub-admin.yaml collections ${TMP_DIR}/community-edition/manifests
-${TOPDIR}/metahub-admin --config ${TMP_DIR}/metahub-admin.yaml compute manifestlists
+./metahub-admin parse --config ${TMP_DIR}/metahub-admin.yaml profiles  --empty-graph ${TMP_DIR}/community-edition/profiles
+./metahub-admin parse --config ${TMP_DIR}/metahub-admin.yaml collections ${TMP_DIR}/community-edition/manifests
+./metahub-admin --config ${TMP_DIR}/metahub-admin.yaml compute manifestlists
 
 echo "#### Create SQLite DB"
 DBFILE=./metahub.db
 cp -r ./misc/yaml/users ${TMP_DIR}/community-edition/users
-${TOPDIR}/metahub-admin --config ${TMP_DIR}/metahub-admin.yaml parse users --metahub-db=${DBFILE} ./misc/yaml/users
-${TOPDIR}/metahub-admin --config ${TMP_DIR}/metahub-admin.yaml sqlite --metahub-db=${DBFILE}
+./metahub-admin --config ${TMP_DIR}/metahub-admin.yaml parse users --metahub-db=${DBFILE} ./misc/yaml/users
+./metahub-admin --config ${TMP_DIR}/metahub-admin.yaml sqlite --metahub-db=${DBFILE}
 rm -rf ${TMP_DIR}
