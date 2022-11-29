@@ -1,19 +1,27 @@
 package transform
 
 import (
+	"github.com/metahub-registry/metahub-core/pkg/backends/magazine"
 	"github.com/metahub-registry/metahub-core/pkg/backends/minio"
 	"github.com/metahub-registry/metahub-core/pkg/backends/neo"
 	"github.com/metahub-registry/metahub-core/pkg/backends/sqlite"
 )
 
 type Transformer struct {
+	Mag    magazine.Magazine
 	SQlite sqlite.Sqlite
 	Neo    neo.Neo
 	Minio  minio.Minio
 }
 
 func New(sq sqlite.Sqlite, n neo.Neo, m minio.Minio) (t Transformer, err error) {
+	mag := magazine.Magazine{
+		Neo:    n,
+		Minio:  m,
+		SQlite: sq,
+	}
 	t = Transformer{
+		Mag:    mag,
 		SQlite: sq,
 		Neo:    n,
 		Minio:  m,

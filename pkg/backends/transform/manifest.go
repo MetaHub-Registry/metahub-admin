@@ -12,6 +12,7 @@ func (t Transformer) ManifestToSqlite() (err error) {
 		return
 	}
 	for idx, m := range manis {
+		logrus.Infof("Manifest %d: %s:%s", idx, m.Upstream.Repo, m.Upstream.Tag)
 		// 1.a insert all configs
 		cfg := m.Config
 		err = t.SQlite.Config.Insert(&cfg)

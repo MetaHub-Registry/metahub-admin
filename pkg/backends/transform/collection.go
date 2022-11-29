@@ -11,31 +11,42 @@ func (t Transformer) CollectionToSqlite() (err error) {
 		return
 	}
 	for idx, c := range cols {
-		err = t.SQlite.Collection.Insert(&c)
+		logrus.Infof("Collection %d: %s:%s", idx, c.Repo, c.Tag.Tag)
+		col, err := t.SQlite.GetInsertCollectionByRepoTag(c.Repo, c.Tag.Tag)
 		if err != nil {
-			err = errors.Wrap(err, "t.SQlite.Collection.Insert(&c)")
+			err = errors.Wrap(err, "t.SQlite.GetInsertCollectionByRepoTag")
 			logrus.Error(err)
 			continue
 		}
+		col.ManifestLists = c.ManifestLists
+		/*
+			err = t.Neo.AddMLtoCollection(&col)
+			if err != nil {
+				err = errors.Wrap(err, "t.Mag.AddMLtoCollection")
+				logrus.Error(err)
+				continue
+			}
+		*/
 		// iterate over ManifestLists
-		for i, ml := range c.ManifestLists {
+		for i, ml := range col.ManifestLists {
+			logrus.Infof("ManifestList %d: %s", i, ml.Digest)
 			// insert ManifestList into SQLite
-			err = t.SQlite.ManifestList.Insert(&ml)
+			err = t.SQlite.InsertManifestList(&ml)
 			if err != nil {
 				err = errors.Wrap(err, "t.SQlite.ManifestList.Insert(&ml)")
 				logrus.Error(err)
 				continue
 			}
-			c.ManifestLists[i] = ml
+			col.ManifestLists[i] = ml
 			// Insert ManifestList-Collection relation into SQLite
-			err = t.SQlite.Collection.InsertXTable(c.SqlID, ml.SqlID)
+			err = t.SQlite.Collection.InsertXTable(col.SqlID, col.Tag.SqlID, ml.SqlID)
 			if err != nil {
 				err = errors.Wrap(err, "t.SQlite.InsertXTable.Insert(c.SqlID, ml.SqlID)")
 				logrus.Error(err)
 				continue
 			}
 		}
-		cols[idx] = c
+		cols[idx] = col
 	}
 	return
 }
