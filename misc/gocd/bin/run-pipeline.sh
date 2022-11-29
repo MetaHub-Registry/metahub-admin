@@ -1,6 +1,8 @@
 #!/bin/bash
 set -e
 
+env|sort -u > ~/gocd-${GO_STAGE_NAME:-build}.env
+
 if [[ -f /run/secrets/aws-access-key ]];then
     export AWS_ACCESS_KEY=$(cat /run/secrets/aws-access-key)
 elif [[ -f ~/.aws/credentials ]];then
@@ -22,7 +24,6 @@ fi
 TMP_DIR=$(mktemp -d -t ci-XXXXXXXXXX)
 TOPDIR=$(git rev-parse --show-toplevel)
 
-env|sort -u > gocd.env
 ## Fetch Artefact
 source ~/gocd.env
 curl -sH "Authorization: bearer ${GOCD_TOKEN}" \
@@ -32,8 +33,6 @@ chmod +x ./metahub-admin
 git clone https://gitlab.com/qnib-metahub/community-edition.git ${TMP_DIR}/community-edition
 
 ## Render config
-export MINIO_URL=${MINIO_URL:-http://localhost:9000}
-export NEO4J_URL=${NEO4J_URL:-http://localhost:7687}
 gonja-cli ${TOPDIR}/misc/tpl/metahub-admin.yaml.tpl ${TMP_DIR}/metahub-admin.yaml
 ## Minio Ops
 ./metahub-admin parse --config ${TMP_DIR}/metahub-admin.yaml manifests --remove-manifests-alias  ${TMP_DIR}/community-edition/manifests
