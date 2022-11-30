@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
+export STACK_NAME=$(echo gocd-${GO_STAGE_NAME}-${GO_PIPELINE_COUNTER} |tr '[:upper:]' '[:lower:]')
 TOPDIR=$(git rev-parse --show-toplevel)
-
 ## Setup metahub-admin config
 TMP_DIR=$(mktemp -d -t ci-XXXXXXXXXX)
 
