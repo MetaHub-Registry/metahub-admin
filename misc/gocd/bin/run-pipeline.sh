@@ -1,7 +1,9 @@
 #!/bin/bash
 set -e
 
-env|sort -u > ~/gocd-${GO_STAGE_NAME:-build}.env
+source ~/gocd_func.sh
+
+dumpEnv
 
 if [[ -f /run/secrets/aws-access-key ]];then
     export AWS_ACCESS_KEY=$(cat /run/secrets/aws-access-key)
@@ -25,13 +27,10 @@ TMP_DIR=$(mktemp -d -t ci-XXXXXXXXXX)
 TOPDIR=$(git rev-parse --show-toplevel)
 
 ## Fetch Artefact
-source ~/gocd.env
-curl -sH "Authorization: bearer ${GOCD_TOKEN}" \
-     -o ./metahub-admin "${GO_SERVER_URL}/files/${GO_PIPELINE_NAME}/${GO_PIPELINE_COUNTER}/Build/1/Go/metahub-admin"
+fetchPipelineArtefact "Build" "Go" "metahub-admin"
 chmod +x ./metahub-admin
 
 git clone https://gitlab.com/qnib-metahub/community-edition.git ${TMP_DIR}/community-edition
-
 ## Render config
 gonja-cli ${TOPDIR}/misc/tpl/metahub-admin.yaml.tpl ${TMP_DIR}/metahub-admin.yaml
 ## Minio Ops
