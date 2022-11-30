@@ -1,5 +1,7 @@
 #!/bin/bash
 
+source ~/gocd_func.sh
+dumpEnv
 
 ### Copy /minio to current dir and upload to artefacts
 CNT_NAME=$(docker ps|awk '/stack.*backup/{print $NF}')

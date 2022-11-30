@@ -7,7 +7,9 @@ source ~/gocd_func.sh
 
 cd ${BIN_PATH}
 
-docker-compose -p admin-stack -f docker-compose-data.yaml up -d
+export STACK_NAME=$(echo gocd-${GO_JOB_NAME}-${GO_PIPELINE_COUNTER} |tr '[:upper:]' '[:lower:]')
+
+docker-compose -p ${STACK_NAME} -f docker-compose-data.yaml up -d
 sleep 3
 
 MINIO_PORT=$(getMinioPort)
