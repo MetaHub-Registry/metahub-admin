@@ -40,7 +40,7 @@ export MINIO_BUCKET_CONFIGS=metahub-prod-configs
 export MINIO_BUCKET_LAYERS=metahub-prod-layers
 export MINIO_BUCKET_MANIFESTS=metahub-prod-manifests
 export MINIO_REGION=eu-west-1
-export MINIO_USER-${AWS_ACCESS_KEY}
+export MINIO_USER=${AWS_ACCESS_KEY}
 export MINIO_PASSWD=${AWS_SECRET_ACCESS_KEY}
 export MINIO_SSL=true
 
