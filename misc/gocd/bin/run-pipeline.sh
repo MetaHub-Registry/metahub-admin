@@ -33,7 +33,7 @@ chmod +x ./metahub-admin
 git clone https://gitlab.com/qnib-metahub/community-edition.git ${TMP_DIR}/community-edition
 ## Render config
 fetchPipelineArtefact "Deploy" "Setup" "misc/gocd/bin/test.env"
-source test.env
+export $(grep -v '^#' test.env | xargs)
 
 gonja-cli ${TOPDIR}/misc/tpl/metahub-admin.yaml.tpl ${TMP_DIR}/metahub-admin.yaml
 ## Minio Ops
