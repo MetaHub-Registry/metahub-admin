@@ -4,6 +4,7 @@ CWD=$(pwd)
 BIN_PATH=$(dirname "$0")
 
 source ~/gocd_func.sh
+dumpEnv
 
 cd ${BIN_PATH}
 
