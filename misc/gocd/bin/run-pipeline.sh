@@ -11,7 +11,7 @@ elif [[ -f ~/.aws/credentials ]];then
 	export AWS_ACCESS_KEY=$(cat ~/.aws/credentials |wildq -M --ini '.s3.aws_access_key_id')
 fi
 if [[ -f /run/secrets/aws-secret-access-key ]];then
-    export AWS_SECRET_ACCESS_KEY=$(cat /run/secrets/aws-secret-access-key)
+    export AWS_SECRET_ACCESS_KEY=$(cat ca)
 elif [[ -f ~/.aws/credentials ]];then
 	export AWS_SECRET_ACCESS_KEY=$(cat ~/.aws/credentials |wildq -M --ini '.s3.aws_secret_access_key')
 fi
@@ -34,6 +34,15 @@ git clone https://gitlab.com/qnib-metahub/community-edition.git ${TMP_DIR}/commu
 ## Render config
 fetchPipelineArtefact "Deploy" "Setup" "misc/gocd/bin/test.env"
 export $(grep -v '^#' test.env | xargs)
+## Set S3 Options
+export MINIO_URL=s3.amazonaws.com
+export MINIO_BUCKET_CONFIGS=metahub-prod-configs
+export MINIO_BUCKET_LAYERS=metahub-prod-layers
+export MINIO_BUCKET_MANIFESTS=metahub-prod-manifests
+export MINIO_REGION=eu-west-1
+export MINIO_USER-${AWS_ACCESS_KEY}
+export MINIO_PASSWD=${AWS_SECRET_ACCESS_KEY}
+export MINIO_SSL=true
 
 gonja-cli ${TOPDIR}/misc/tpl/metahub-admin.yaml.tpl ${TMP_DIR}/metahub-admin.yaml
 ## Minio Ops
