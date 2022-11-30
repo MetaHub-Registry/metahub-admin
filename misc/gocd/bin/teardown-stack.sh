@@ -5,6 +5,4 @@ export STACK_NAME=$(echo gocd-${GO_JOB_NAME}-${GO_PIPELINE_COUNTER} |tr '[:upper
 dumpEnv
 
 ### Copy /minio to current dir and upload to artefacts
-CNT_NAME=$(docker ps| grep ${STACK_NAME} | awk '/backup/{print $NF}')
-docker exec -t --workdir /minio ${CNT_NAME} tar cf /backup/minio.tar .
-docker-compose -p admin-stack -f docker-compose-data.yaml down -v
+docker-compose -p ${STACK_NAME} -f docker-compose-data.yaml down -v

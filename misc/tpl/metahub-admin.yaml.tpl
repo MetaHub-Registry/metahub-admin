@@ -1,6 +1,6 @@
 minio:
   url: {{ MINIO_URL }}
-  region: us-east-1
+  region: {{ MINIO_REGION }}
   user: {{ MINIO_USER|default("minio")}}
   password: {{ MINIO_PASSWD|default("miniominio") }}
   redirect: {{ MINIO_REDIRECT|default("false") }}
