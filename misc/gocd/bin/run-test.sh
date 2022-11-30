@@ -12,7 +12,8 @@ if [[ ! -f test.env ]];then
      -o test.env "${GO_SERVER_URL}/files/${GO_PIPELINE_NAME}/${GO_PIPELINE_COUNTER}/Deploy/1/Setup/misc/gocd/bin/test.env"
 fi
 source test.env
-
+echo ">> MINIO_URL: ${MINIO_URL}"
+echo ">> NEO4J_URL: ${NEO4J_URL}"
 export MINIO_URL=${MINIO_URL:-http://localhost:9000}
 export NEO4J_URL=${NEO4J_URL:-http://localhost:7687}
 

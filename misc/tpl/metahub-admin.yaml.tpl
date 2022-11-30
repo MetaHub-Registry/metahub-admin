@@ -1,7 +1,7 @@
 minio:
   url: {{ MINIO_URL }}
-  region: {{ MINIO_REGION }}
-  user: {{ MINIO_USER|default("minio")}}
+  region: {{ MINIO_REGION |default("us-east-1") }}
+  user: {{ MINIO_USER |default("minio")}}
   password: {{ MINIO_PASSWD|default("miniominio") }}
   redirect: {{ MINIO_REDIRECT|default("false") }}
   ssl: {{ MINIO_SSL|default("false") }}
