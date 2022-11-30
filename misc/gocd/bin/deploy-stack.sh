@@ -8,7 +8,7 @@ dumpEnv
 
 cd ${BIN_PATH}
 
-export STACK_NAME=$(echo gocd-${GO_STAGE_NAME}-${GO_PIPELINE_COUNTER} |tr '[:upper:]' '[:lower:]')
+export STACK_NAME=$(echo gocd-${GO_PIPELINE_NAME}_${GO_PIPELINE_COUNTER} |tr '[:upper:]' '[:lower:]')
 for x in $(docker ps -q|grep -v $(echo gocd-${GO_STAGE_NAME} |tr '[:upper:]' '[:lower:]'));do docker rm -f ${x};done
 docker-compose -p ${STACK_NAME} -f docker-compose-data.yaml up -d
 sleep 3

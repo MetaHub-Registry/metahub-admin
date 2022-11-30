@@ -1,7 +1,7 @@
 #!/bin/bash
 
 source ~/gocd_func.sh
-export STACK_NAME=$(echo gocd-${GO_STAGE_NAME}-${GO_PIPELINE_COUNTER} |tr '[:upper:]' '[:lower:]')
+export STACK_NAME=$(echo gocd-${GO_PIPELINE_NAME}_${GO_PIPELINE_COUNTER} |tr '[:upper:]' '[:lower:]')
 dumpEnv
 
 set -x
