@@ -8,6 +8,10 @@ mv go.mod.tmp go.mod
 mkdir -p ~/bin
 TOPDIR=$(git rev-parse --show-toplevel)
 
+if [[ -f ~/gocd.env ]];then
+    source ~/gocd.env
+fi
+
 if [[ -z ${GITLAB_TOKEN} ]];then
     echo "GITLAB_TOKEN not set"
     exit 1
