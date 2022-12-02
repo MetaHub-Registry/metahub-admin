@@ -1,6 +1,6 @@
 module github.com/metahub-registry/metahub-admin
 
-go 1.19
+go 1.18
 
 require (
 	github.com/chrispappas/golang-generics-set v1.0.1
