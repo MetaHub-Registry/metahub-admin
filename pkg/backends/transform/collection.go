@@ -11,8 +11,8 @@ func (t Transformer) CollectionToSqlite() (err error) {
 		return
 	}
 	for idx, c := range cols {
-		logrus.Infof("Collection %d: %s:%s", idx, c.Repo, c.Tag.Tag)
-		col, err := t.SQlite.GetInsertCollectionByRepoTag(c.Repo, c.Tag.Tag)
+		logrus.Infof("Collection %d: %s:%s", idx, c.Repo, c.Tag)
+		col, err := t.SQlite.GetInsertCollectionByRepoTag(c.Repo, c.Tag)
 		if err != nil {
 			err = errors.Wrap(err, "t.SQlite.GetInsertCollectionByRepoTag")
 			logrus.Error(err)
@@ -39,7 +39,7 @@ func (t Transformer) CollectionToSqlite() (err error) {
 			}
 			col.ManifestLists[i] = ml
 			// Insert ManifestList-Collection relation into SQLite
-			err = t.SQlite.Collection.InsertXTable(col.SqlID, col.Tag.SqlID, ml.SqlID)
+			err = t.SQlite.Collection.InsertXTable(col.SqlID, col.ColTag.SqlID, ml.SqlID)
 			if err != nil {
 				err = errors.Wrap(err, "t.SQlite.InsertXTable.Insert(c.SqlID, ml.SqlID)")
 				logrus.Error(err)
