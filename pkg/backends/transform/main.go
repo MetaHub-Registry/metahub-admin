@@ -16,9 +16,9 @@ type Transformer struct {
 
 func New(sq sqlite.Sqlite, n neo.Neo, m minio.Minio) (t Transformer, err error) {
 	mag := magazine.Magazine{
-		Neo:    n,
-		Minio:  m,
-		SQlite: sq,
+		Database:       n,
+		Minio:          m,
+		UserManagement: sq,
 	}
 	t = Transformer{
 		Mag:    mag,
