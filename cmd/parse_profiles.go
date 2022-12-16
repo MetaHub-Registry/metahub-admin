@@ -28,7 +28,6 @@ func init() {
 	// Cobra supports Persistent Flags which will work for this command
 	// and all subcommands, e.g.:
 	// parseCmd.PersistentFlags().String("foo", "", "A help for foo")
-	parseProfilesCmd.Flags().String("metahub-db", "", "The metahub database file to use - will be overwritten")
 	parseProfilesCmd.Flags().Bool("empty-graph", false, "Remove all nodes and edges from the graph database")
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
@@ -56,17 +55,6 @@ func pParseCmd(cmd *cobra.Command, args []string) {
 	if err != nil {
 		logrus.Error(err)
 	}
-	if mag.SQlite.MhFile == "" {
-		emtpyGraph, _ := cmd.Flags().GetBool("empty-graph")
-		if emtpyGraph {
-			err = mag.Neo.EmptyGraph()
-			if err != nil {
-				logrus.Fatal(err)
-			}
-		}
-	} else {
-		defer mag.SQlite.Close()
-	}
 	for _, prf := range prfs {
 		// Insert Filter
 		f := types.Filter{
@@ -88,53 +76,30 @@ func pParseCmd(cmd *cobra.Command, args []string) {
 		logrus.Info(msg)
 		// Filter
 		var fID int64
-		if mag.SQlite.MhFile == "" {
-			///// NEO
-			fID, err = mag.NeoInsertFilter(ctx, f)
-			if err != nil {
-				logrus.Error(err)
-				continue
-			}
-		} else {
-			fID, err = mag.SQliteInsertFilter(ctx, f)
-			if err != nil {
-				logrus.Error(err)
-				continue
-			}
+		///// NEO
+		fID, err = mag.NeoInsertFilter(ctx, f)
+		if err != nil {
+			logrus.Error(err)
+			continue
 		}
+
 		p := types.Profile{
 			Name: prf.Name,
 		}
 		var prfId int64
-		if mag.SQlite.MhFile == "" {
-			prfId, err = mag.NeoInsertProfile(ctx, p)
-			if err != nil {
-				logrus.Error(err)
-				continue
-			}
-		} else {
-			prfId, err = mag.SQliteInsertProfile(ctx, p)
-			if err != nil {
-				logrus.Error(err)
-				continue
-			}
+		prfId, err = mag.NeoInsertProfile(ctx, p)
+		if err != nil {
+			logrus.Error(err)
+			continue
 		}
 		//logrus.Warnf("Profile '%s' has ID %d", prf.Name, prfId)
 
 		//logrus.Warnf("Filter '%s' has ID %d", f.Label, fId)
 		// Link Profile and Filter
-		if mag.SQlite.MhFile == "" {
-			err = mag.NeoLinkProfileToFilter(ctx, prfId, fID)
-			if err != nil {
-				logrus.Error(err)
-				continue
-			}
-		} else {
-			err = mag.SQliteLinkProfileToFilter(ctx, prfId, fID)
-			if err != nil {
-				logrus.Error(err)
-				continue
-			}
+		err = mag.NeoLinkProfileToFilter(ctx, prfId, fID)
+		if err != nil {
+			logrus.Error(err)
+			continue
 		}
 	}
 

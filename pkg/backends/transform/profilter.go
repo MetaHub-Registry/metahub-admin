@@ -27,7 +27,7 @@ func (t Transformer) ProfilterToSqlite() (err error) {
 				logrus.Fatal(err)
 			}
 		} else {
-			p.SqlID = profileID
+			p.ID = profileID
 		}
 		pfp.Profile = p
 		f := pfp.Filter

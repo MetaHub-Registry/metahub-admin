@@ -39,9 +39,9 @@ func (t Transformer) CollectionToSqlite() (err error) {
 			}
 			col.ManifestLists[i] = ml
 			// Insert ManifestList-Collection relation into SQLite
-			err = t.SQlite.Collection.InsertXTable(col.SqlID, col.ColTag.SqlID, ml.SqlID)
+			err = t.SQlite.Collection.InsertXTable(col.ID, col.ColTag.ID, ml.ID)
 			if err != nil {
-				err = errors.Wrap(err, "t.SQlite.InsertXTable.Insert(c.SqlID, ml.SqlID)")
+				err = errors.Wrap(err, "t.SQlite.InsertXTable.Insert(c.ID, ml.ID)")
 				logrus.Error(err)
 				continue
 			}

@@ -61,12 +61,12 @@ func pCollectonCmd(cmd *cobra.Command, args []string) {
 	for _, col := range cols {
 		l.Infof("# Col: %s:%s", col.Name, col.Tag)
 		// Create Collection
-		colID, err := mag.CreateCollection(col)
+		colID, colTagID, err := mag.CreateCollection(col)
 		if err != nil {
 			l.Error(err)
 			continue
 		}
-		l.Infof("Collection: %d", colID)
+		l.Infof("Collection: %d / Tag: %d", colID, colTagID)
 		for _, m := range col.Manifests {
 			l.Infof("  Maninfest > %s", m.Image)
 			// Fetch real Manifest from cache
@@ -79,14 +79,14 @@ func pCollectonCmd(cmd *cobra.Command, args []string) {
 			//// 1. Manifest
 			// 1. Insert Manifest
 			maniID, err := mag.NeoInsertManifest(ctx, mani)
-			mani.NeoID = maniID
+			mani.ID = maniID
 			if err != nil {
 				l.Error(err)
 				continue
 			}
 			//l.Warnf("  ManifestID: %d", maniID)
 			//// Link Collection to Manifest
-			err = mag.NeoLinkCollectionToManifest(ctx, colID, maniID)
+			err = mag.NeoLinkCollectionToManifest(ctx, colID, colTagID, maniID)
 			if err != nil {
 				l.Error(err)
 				continue
@@ -105,7 +105,7 @@ func pCollectonCmd(cmd *cobra.Command, args []string) {
 				continue
 			}
 			// 3. Insert Config
-			cfgID, err := mag.NeoInsertConfig(ctx, mani.Config, mani.Upstream)
+			cfgID, err := mag.InsertConfig(ctx, mani.Config, mani.Upstream)
 			if err != nil {
 				l.Error(err)
 				continue
@@ -138,19 +138,21 @@ func pCollectonCmd(cmd *cobra.Command, args []string) {
 				l.Error(err)
 				continue
 			}
-			//l.Warnf("  PlatformID (Features: %s): %d", mani.Platform.Features, pID)
+			mani.Platform.ID = pID
+			//l.Warnf("  Platform '%s' (Features: %s): %d", mani.Platform.GetLabel(), mani.Platform.Features, pID)
 			//// Link Manifest to Platform
 			err = mag.NeoLinkManifestToPlatform(ctx, maniID, pID)
 			if err != nil {
 				l.Error(err)
 				continue
 			}
-			//// Connect new Platform to Filter
-			err = mag.NeoLinkPlatformToFilter(ctx, pID, mani.Platform)
+			//// TODO: Connect new Platform to Filter
+			err = mag.Database.Filter_UpdatePlatform(ctx, mani.Platform)
 			if err != nil {
 				l.Error(err)
 				continue
 			}
+
 		}
 	}
 
