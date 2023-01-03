@@ -3,6 +3,8 @@
 source ~/gocd_func.sh
 dumpEnv
 
+set -x
+
 cat go.mod|awk '!/^replace/' > go.mod.tmp
 mv go.mod.tmp go.mod
 mkdir -p ~/bin
