@@ -56,5 +56,7 @@ container:ecr:
     - docker push $IMAGE_NAME
     - docker build --target=busybox -t $IMAGE_NAME-busybox .
     - docker push $IMAGE_NAME-busybox
+    - docker build -t $CI_REGISTRY_IMAGE:$CI_COMMIT_TAG .
+    - docker push $CI_REGISTRY_IMAGE:$CI_COMMIT_TAG
     - docker build --target=busybox -t $CI_REGISTRY_IMAGE:$CI_COMMIT_TAG-busybox .
     - docker push $CI_REGISTRY_IMAGE:$CI_COMMIT_TAG-busybox

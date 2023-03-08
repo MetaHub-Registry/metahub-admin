@@ -4,3 +4,4 @@ coverage.txt
 metahub-admin
 gocd-*.env
 coverage.xml
+misc/config/aws.yaml

@@ -26,4 +26,5 @@ ENV CGO_ENABLED=1 GOOS=linux
 RUN --mount=type=cache,target=/go/pkg/mod go build -a -ldflags '-extldflags "-static"' .
 
 FROM alpine:3.16.2
+RUN apk add ca-certificates
 COPY --from=go /go/metahub-admin/metahub-admin /usr/bin/metahub-admin
