@@ -1,10 +1,6 @@
 package transform
 
-import (
-	"github.com/pkg/errors"
-	"github.com/sirupsen/logrus"
-)
-
+/*
 func (t Transformer) ProfilterToSqlite() (err error) {
 
 	// get all profiles
@@ -61,3 +57,4 @@ func (t Transformer) ProfilterToSqlite() (err error) {
 	}
 	return
 }
+*/

@@ -9,9 +9,11 @@ else
     tmp_dir=$1
 fi
 if [[ -z "$CE_VER" ]]; then
-    CE_VER=0.0.7
+    wget -qO - https://gitlab.com/qnib-metahub/community-edition/-/archive/develop/community-edition-develop.tar \
+        |tar xf - -C ${tmp_dir} --strip-components=1
+else 
+    wget -qO - https://gitlab.com/qnib-metahub/community-edition/-/archive/v${CE_VER}/community-edition-v${CE_VER}.tar.gz \
+        |tar xfz - -C ${tmp_dir} --strip-components=1
 fi
-wget -qO - https://gitlab.com/qnib-metahub/community-edition/-/archive/v${CE_VER}/community-edition-v${CE_VER}.tar.gz \
-    |tar xfz - -C ${tmp_dir} --strip-components=1
 
 touch ${tmp_dir}/.done

@@ -3,8 +3,6 @@
 source ~/gocd_func.sh
 dumpEnv
 
-set -x
-
 cat go.mod|awk '!/^replace/' > go.mod.tmp
 mv go.mod.tmp go.mod
 mkdir -p ~/bin
@@ -19,10 +17,15 @@ if [[ -z ${GITLAB_TOKEN} ]];then
     exit 1
 fi
 
-if [[ -d ext/metalib ]];then
-  git -C ext/metalib pull
-else
-  git clone https://gitlab-ci-token:${GITLAB_TOKEN}@github.com/metahub-registry/metahub-core ext/metalib
+if [[ "${DEPLOYMENT}" == "dev" ]];then
+   echo "> git clone --branch=develop https://gitlab-ci-token:GITLAB_TOKEN@github.com/metahub-registry/metahub-core ext/metalib"
+   git clone --branch=develop https://gitlab-ci-token:${GITLAB_TOKEN}@github.com/metahub-registry/metahub-core ext/metalib
+elif [[ "${DEPLOYMENT}" == "main" ]];then
+   echo "> git clone --branch=main https://gitlab-ci-token:GITLAB_TOKEN@github.com/metahub-registry/metahub-core ext/metalib"
+   git clone --branch=main https://gitlab-ci-token:${GITLAB_TOKEN}@github.com/metahub-registry/metahub-core ext/metalib
+else 
+   echo "ERROR: No DEPLOYMENT branch set"
+   exit 1
 fi
 
 go mod edit -replace github.com/metahub-registry/metahub-core=${PWD}/ext/metalib

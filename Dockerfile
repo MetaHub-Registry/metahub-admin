@@ -9,6 +9,10 @@ RUN --mount=type=cache,target=/go/pkg/mod go build -a -ldflags '-extldflags "-st
 FROM busybox:1.35.0 AS busybox
 COPY --from=cbuilder /go/metahub-admin/metahub-admin /usr/bin/metahub-admin
 
+FROM golang:1.19.1-alpine3.16 AS dev
+RUN apk add --no-cache git gcc musl-dev bash vim curl wget
+COPY ./misc/docker/dev/bash_history /root/.bash_history
+
 FROM golang:1.19.1-alpine3.16 AS go
 RUN apk add --no-cache git gcc musl-dev
 WORKDIR /go/metahub-admin

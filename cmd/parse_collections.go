@@ -3,13 +3,14 @@ package cmd
 import (
 	"context"
 	"os"
-	"strings"
 
+	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 
 	"github.com/metahub-registry/metahub-admin/pkg/config"
 	"github.com/metahub-registry/metahub-core/pkg/backends/magazine"
+	"github.com/metahub-registry/metahub-core/pkg/types"
 	yamlCfg "github.com/metahub-registry/metahub-core/pkg/yaml/config"
 )
 
@@ -71,14 +72,54 @@ func pCollectonCmd(cmd *cobra.Command, args []string) {
 			l.Infof("  Maninfest > %s", m.Image)
 			// Fetch real Manifest from cache
 			mani, err := mag.GetManifest(ctx, m)
-			mani.Platform.Features = strings.Join(m.Platform.Features, ",")
+			if err != nil {
+				err = errors.Wrap(err, "Failed to get Manifest from cache using GetManifest()")
+				l.Error(err)
+				continue
+			}
+			// Make sure the (standin) Manifest is present
+			ms := types.ManifestFromManifestData(mani)
+			msID, err := mag.Database.Manifest_GetInsert(ctx, ms)
 			if err != nil {
 				l.Error(err)
 				continue
 			}
+			// 1. Insert Platform
+			platID, err := mag.NeoInsertPlatform(ctx, mani.Platform)
+			if err != nil {
+				l.Error(err)
+				continue
+			}
+			err = mag.Database.LinkManifestToPlatform(ctx, msID, platID)
+			if err != nil {
+				l.Error(err)
+				continue
+			}
+			/// 1. Insert Config
+			cfgID, err := mag.InsertConfig(ctx, mani.Config, mani.Upstream)
+			if err != nil {
+				l.Error(err)
+				continue
+			}
+			l.Warnf("  configID: %d", cfgID)
+			// 4. Insert Layers
+			for _, layer := range mani.Layers {
+				lID, err := mag.NeoInsertLayer(ctx, layer)
+				if err != nil {
+					l.Error(err)
+					continue
+				}
+				l.Warnf("  LayerID: %d", lID)
+				//// Link Manifest to Layer
+				//err = mag.NeoLinkManifestToLayer(ctx, maniID, lID, idx)
+				//if err != nil {
+				//	l.Error(err)
+				//	continue
+				//}
+			}
 			//// 1. Manifest
 			// 1. Insert Manifest
-			maniID, err := mag.NeoInsertManifest(ctx, mani)
+			maniID, err := mag.NeoInsertManifestData(ctx, msID, mani, "original")
 			mani.ID = maniID
 			if err != nil {
 				l.Error(err)
@@ -86,72 +127,52 @@ func pCollectonCmd(cmd *cobra.Command, args []string) {
 			}
 			//l.Warnf("  ManifestID: %d", maniID)
 			//// Link Collection to Manifest
-			err = mag.NeoLinkCollectionToManifest(ctx, colID, colTagID, maniID)
+			err = mag.NeoLinkCollectionToManifest(ctx, colID, colTagID, msID)
 			if err != nil {
 				l.Error(err)
 				continue
 			}
-			// 2. Insert Upstream
-			upID, err := mag.NeoInsertUpstream(ctx, mani.Upstream)
-			if err != nil {
-				l.Error(err)
-				continue
-			}
-			//l.Warnf("  UpstreamID: %d", upID)
-			//// Link Manifest to Upstream
-			err = mag.NeoLinkManifestToUpstream(ctx, maniID, upID)
-			if err != nil {
-				l.Error(err)
-				continue
-			}
-			// 3. Insert Config
-			cfgID, err := mag.InsertConfig(ctx, mani.Config, mani.Upstream)
-			if err != nil {
-				l.Error(err)
-				continue
-			}
-			//l.Warnf("  configID: %d", cfgID)
+
 			//// Link Manifest to Config
 			err = mag.NeoLinkManifestToConfig(ctx, maniID, cfgID)
 			if err != nil {
 				l.Error(err)
 				continue
 			}
-			// 4. Insert Layers
-			for idx, layer := range mani.Layers {
-				lID, err := mag.NeoInsertLayer(ctx, layer)
+			/// Container Image Labels (from Config Blob)
+			for k, v := range mani.Config.Cfg.Config.Labels {
+				logrus.Warnf("  Label: %s=%s", k, v)
+				a := types.NewAnnotation(k, v)
+				mag.Config_AddLabel(ctx, cfgID, a)
+			}
+
+			///// Annotations
+			// -> Extract the extra Annotations from the Collection per Manifest
+			// -> Add them to the ManifestStandin (msID
+			for k, v := range m.Annotations {
+				a := types.NewAnnotation(k, v)
+				err = mag.Database.Manifest_AddAnnotation(ctx, msID, &a)
+				if err != nil {
+					// Fail if Annotation is already defined and has a different value
+					l.Error(err)
+					return
+				}
+			}
+			/*****
+			We are going to stay clean while parsing the collections:
+			  1. Only add labels to the config object
+			  2. Only add annotations to the manifest(standin) object
+			during the `compute manifest` step, we'll add
+			  1. Labels from the config object to the manifestData object if they do have the reverseDNS annotation
+			  2. Annotations from the manifest(standin) object to the manifestData object.
+			    -> if they conflict with the labels, we'll throw an error
+				err = mag.Database.Config_AddLabels(ctx, cfgID, &mani.Annotations)
 				if err != nil {
 					l.Error(err)
 					continue
 				}
-				//l.Warnf("  LayerID: %d", lID)
-				//// Link Manifest to Layer
-				err = mag.NeoLinkManifestToLayer(ctx, maniID, lID, idx)
-				if err != nil {
-					l.Error(err)
-					continue
-				}
-			}
-			// 5. Insert Platform
-			pID, err := mag.NeoInsertPlatform(ctx, mani.Platform)
-			if err != nil {
-				l.Error(err)
-				continue
-			}
-			mani.Platform.ID = pID
-			//l.Warnf("  Platform '%s' (Features: %s): %d", mani.Platform.GetLabel(), mani.Platform.Features, pID)
-			//// Link Manifest to Platform
-			err = mag.NeoLinkManifestToPlatform(ctx, maniID, pID)
-			if err != nil {
-				l.Error(err)
-				continue
-			}
-			//// TODO: Connect new Platform to Filter
-			err = mag.Database.Filter_UpdatePlatform(ctx, mani.Platform)
-			if err != nil {
-				l.Error(err)
-				continue
-			}
+				mag.Database.Manifest_AddAnnotations(ctx, maniID, &mani.Annotations)
+			*/
 
 		}
 	}

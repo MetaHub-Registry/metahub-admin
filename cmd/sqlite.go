@@ -3,18 +3,13 @@ Copyright © 2022 NAME HERE <EMAIL ADDRESS>
 */
 package cmd
 
-import (
-	"github.com/pkg/errors"
-	"github.com/sirupsen/logrus"
-	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
-	"github.com/metahub-registry/metahub-admin/pkg/backends/transform"
-	"github.com/metahub-registry/metahub-admin/pkg/config"
-	"github.com/metahub-registry/metahub-core/pkg/backends/minio"
-	"github.com/metahub-registry/metahub-core/pkg/backends/neo"
-	"github.com/metahub-registry/metahub-core/pkg/backends/sqlite"
+const (
+	MH_TABLES  = "collections,configs,filters,layers,manifests,manifestlists,platforms,profiles,upstreams"
+	USR_TABLES = "users,tokens"
+	NONE       = "none"
 )
 
+/*
 // sqliteCmd represents the sqlite command
 var sqliteCmd = &cobra.Command{
 	Use:   "sqlite",
@@ -23,11 +18,6 @@ var sqliteCmd = &cobra.Command{
 	Run:   Cmd,
 }
 
-const (
-	MH_TABLES  = "collections,configs,filters,layers,manifests,manifestlists,platforms,profiles,upstreams"
-	USR_TABLES = "users,tokens"
-	NONE       = "none"
-)
 
 func init() {
 	rootCmd.AddCommand(sqliteCmd)
@@ -84,3 +74,4 @@ func checkErr(err error, msg string) {
 		panic(err)
 	}
 }
+*/

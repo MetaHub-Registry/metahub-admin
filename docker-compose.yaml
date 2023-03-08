@@ -5,22 +5,24 @@ services:
     volumes:
       - ce_data:/opt/community-edition
       - ./misc/bin:/opt/bin/
-    environment:
-      - CE_VER=0.0.7
+    #environment:
+    #  - CE_VER=0.0.7
     networks:
      - mh-internal
     command: [/opt/bin/ce-fetch.sh, /opt/community-edition]
-  admin:
-    image: 193198941246.dkr.ecr.eu-west-1.amazonaws.com/qnib-golang/metahub-admin:v0.2.0
-    networks:
-     - mh-internal
-     - mh-data
+  dev:
+    build: 
+      context: .
+      target: dev
     volumes:
-      - .:/go/metahub-admin
       - ce_data:/opt/community-edition
-      - /var/lib/metahub/
-    working_dir: /var/lib/metahub/
-    command: ["sleep", "inf"]    
+      - /Users/kniepbert/go/src/github.com/metahub-registry/metahub-core:/Users/kniepbert/go/src/github.com/metahub-registry/metahub-core
+      - /Users/kniepbert/go/src/github.com/metahub-registry/metahub-admin:/Users/kniepbert/go/src/github.com/metahub-registry/metahub-admin
+    networks:
+      - mh-internal
+      - mh-data
+    working_dir: /Users/kniepbert/go/src/github.com/metahub-registry/metahub-admin
+    command: ["sleep", "inf"]
 networks:
   mh-internal:
   mh-data:

@@ -6,3 +6,6 @@ manifests:
         platform:
           os: linux
           arch: arm64
+        annotations:
+          org.supercontainers.hardware.cpu.optimization.mode: architecure
+          org.supercontainers.hardware.cpu.optimization.target: aarch64
