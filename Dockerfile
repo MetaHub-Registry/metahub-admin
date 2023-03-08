@@ -1,4 +1,7 @@
 # syntax=docker/dockerfile:1.4
+FROM alpine as certs
+RUN apk update && apk add ca-certificates
+
 FROM golang:1.19.1 AS cbuilder
 WORKDIR /go/metahub-admin
 COPY . ./
@@ -8,6 +11,7 @@ RUN --mount=type=cache,target=/go/pkg/mod go build -a -ldflags '-extldflags "-st
 
 FROM busybox:1.35.0 AS busybox
 COPY --from=cbuilder /go/metahub-admin/metahub-admin /usr/bin/metahub-admin
+COPY --from=certs /etc/ssl/certs /etc/ssl/certs
 
 FROM golang:1.19.1-alpine3.16 AS dev
 RUN apk add --no-cache git gcc musl-dev bash vim curl wget
