@@ -20,7 +20,7 @@ fi
 if [[ "${DEPLOYMENT}" == "dev" ]];then
    echo "> git clone --branch=develop https://gitlab-ci-token:GITLAB_TOKEN@github.com/metahub-registry/metahub-core ext/metalib"
    git clone --branch=develop https://gitlab-ci-token:${GITLAB_TOKEN}@github.com/metahub-registry/metahub-core ext/metalib
-elif [[ "${DEPLOYMENT}" == "main" ]];then
+elif [[ "${DEPLOYMENT}" == "prod" ]];then
    echo "> git clone --branch=main https://gitlab-ci-token:GITLAB_TOKEN@github.com/metahub-registry/metahub-core ext/metalib"
    git clone --branch=main https://gitlab-ci-token:${GITLAB_TOKEN}@github.com/metahub-registry/metahub-core ext/metalib
 else 
