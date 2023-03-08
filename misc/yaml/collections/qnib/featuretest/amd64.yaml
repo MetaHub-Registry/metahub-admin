@@ -6,3 +6,6 @@ manifests:
         platform:
           os: linux
           arch: amd64
+        annotations:
+          org.supercontainers.hardware.cpu.target-type: platform
+          org.supercontainers.hardware.cpu.target: amd64

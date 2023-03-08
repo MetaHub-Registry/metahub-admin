@@ -9,11 +9,15 @@ import (
 )
 
 // parseCmd represents the parse command
-var parseCmd = &cobra.Command{
-	Use:   "parse",
-	Short: "Parse YAML files (profiles, collections, base, manipulation) and store them in the database",
-	Run:   pCmd,
-}
+var (
+	parseCmd = &cobra.Command{
+		Use:   "parse",
+		Short: "Parse YAML files (profiles, collections, base, manipulation) and store them in the database",
+		Run:   pCmd,
+	}
+	emptyGrah  = false
+	emptyMinio = false
+)
 
 func init() {
 	rootCmd.AddCommand(parseCmd)
@@ -23,7 +27,8 @@ func init() {
 	// parseCmd.PersistentFlags().String("foo", "", "A help for foo")
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
-	// parseCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	parseCmd.PersistentFlags().BoolVar(&emptyGrah, "empty-graph", false, "Empty the graph before parsing")
+	parseCmd.PersistentFlags().BoolVar(&emptyMinio, "empty-minio", false, "Empty the object store before parsing")
 }
 
 func pCmd(cmd *cobra.Command, args []string) {

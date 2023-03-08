@@ -12,13 +12,13 @@ if [ ! -d "$YAMLPATH" ]; then
 elif [ ! -d "$YAMLPATH/profiles" ]; then
     echo "No such directory: $YAMLPATH/profiles"
     exit 1
-elif [ ! -d "$YAMLPATH/manifests" ]; then
-    echo "No such directory: $YAMLPATH/manifests"
+elif [ ! -d "$YAMLPATH/collections" ]; then
+    echo "No such directory: $YAMLPATH/collections"
     exit 1
 fi
 set -x
-go run main.go parse --config ./misc/config/metahub-admin.yaml manifests $YAMLPATH/manifests
+go run main.go parse --config ./misc/config/metahub-admin.yaml manifests $YAMLPATH/collections
 
 go run main.go parse --config ./misc/config/metahub-admin.yaml profiles $YAMLPATH/profiles
-go run main.go parse --config ./misc/config/metahub-admin.yaml collections $YAMLPATH/manifests
+go run main.go parse --config ./misc/config/metahub-admin.yaml collections $YAMLPATH/collections
 go run main.go --config misc/config/metahub-admin.yaml compute manifestlists

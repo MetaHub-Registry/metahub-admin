@@ -1,6 +1,8 @@
 package cmd
 
 import (
+	"context"
+
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 
@@ -28,12 +30,13 @@ func init() {
 }
 
 func cManifestlistCmd(cmd *cobra.Command, args []string) {
+	ctx := context.Background()
 	config.SetCommandValues(cmd)
 	mag, err := magazine.NewMagazine(cmd, MH_TABLES)
 	if err != nil {
 		logrus.Error(err)
 	}
-	err = mag.ComputeManifestlists()
+	err = mag.ComputeManifestlists(ctx)
 	if err != nil {
 		logrus.Error(err)
 	}

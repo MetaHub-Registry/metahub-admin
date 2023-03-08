@@ -26,6 +26,7 @@ func init() {
 	// and all subcommands, e.g.:
 	// parseCmd.PersistentFlags().String("foo", "", "A help for foo")
 	parseManifestCmd.Flags().Bool("remove-manifests-alias", false, "Remove alias object in manifest (<reg>/<repo>/<tag> -> sha256)")
+	parseManifestCmd.Flags().Bool("skip-layer-download", false, "Do not download layers to object store")
 
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
@@ -60,6 +61,10 @@ func pManiCmd(cmd *cobra.Command, args []string) {
 			logrus.Fatal(err)
 		}
 	}
+	skipLayerDownload, err := cmd.Flags().GetBool("skip-layer-download")
+	if err != nil {
+		skipLayerDownload = false
+	}
 	for _, col := range cols {
 		logrus.Infof("# Col: %s:%s", col.Name, col.Tag)
 		for _, m := range col.Manifests {
@@ -81,14 +86,17 @@ func pManiCmd(cmd *cobra.Command, args []string) {
 				logrus.Error(err)
 				continue
 			}
-			// Deal with Layers
-			err = mag.CacheLayers(ctx, mani)
-			if err != nil {
-				logrus.Error(err)
-				continue
+			if !skipLayerDownload {
+				// Deal with Layers
+				err = mag.CacheLayers(ctx, mani)
+				if err != nil {
+					logrus.Error(err)
+					continue
 
+				}
+			} else {
+				logrus.Infof("  - Skip layer download")
 			}
-
 		}
 	}
 

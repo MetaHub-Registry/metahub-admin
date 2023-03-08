@@ -1,17 +1,20 @@
 #!/bin/bash
-set -e
-
-go run main.go parse --config misc/config/local.yaml profiles  --empty-graph misc/yaml/profiles/library
-## Minio Ops
-for x in $@;do
-	echo "#### Parse Manifest $x"
-	go run main.go parse --config misc/config/local.yaml manifests --remove-manifests-alias $x
-done
-
+set -ex
+go run main.go --config ${CFG_PATH:-./misc/config/compose-config.yaml} parse rules /community-edition/rules/
+go run main.go --config ${CFG_PATH:-./misc/config/compose-config.yaml} parse profiles /community-edition/profiles/
+if [[ -z ${SKIP_PARSE_MANIFESTS} ]];then
+	## Minio Ops
+	for x in $@;do
+		echo "#### Parse Manifest $x"
+		go run main.go --config ${CFG_PATH:-./misc/config/compose-config.yaml} parse manifests --remove-manifests-alias $x
+	done
+fi
 ## Neo4j Ops
 for x in $@;do
 	echo "#### Parse Manifest $x"
-	go run main.go parse --config misc/config/local.yaml collections $x
+	go run main.go --config ${CFG_PATH:-./misc/config/compose-config.yaml} parse collections $x
 done
+echo "#### Compute Manifests"
+go run main.go --config ${CFG_PATH:-./misc/config/compose-config.yaml} compute manifests
 echo "#### Compute ManifestList"
-go run main.go --config misc/config/local.yaml compute manifestlists
+go run main.go --config ${CFG_PATH:-./misc/config/compose-config.yaml} compute manifestlists

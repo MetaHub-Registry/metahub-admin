@@ -1,10 +1,6 @@
 package transform
 
-import (
-	"github.com/pkg/errors"
-	"github.com/sirupsen/logrus"
-)
-
+/*
 func (t Transformer) ManifestToSqlite() (err error) {
 	/// 1. get all (Manifests)-(Upstream)-(Platform) nodes related to each other
 	manis, err := t.Neo.GetAllManifests()
@@ -65,3 +61,4 @@ func (t Transformer) ManifestToSqlite() (err error) {
 	}
 	return
 }
+*/

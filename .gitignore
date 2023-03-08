@@ -3,3 +3,4 @@ lcov.info
 coverage.txt
 metahub-admin
 gocd-*.env
+coverage.xml

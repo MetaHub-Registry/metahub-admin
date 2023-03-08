@@ -1,0 +1,18 @@
+minio:
+  url: minio:9000
+  region: us-east-1
+  user: minio 
+  password: miniominio
+  redirect: false
+  ssl: false
+  manifests:
+    bucket: manifests
+  configs:
+    bucket: configs
+  layers:
+    bucket: layers
+neo4j:
+  dbname: neo4j
+  user: neo4j
+  password: test
+  url: bolt://neo4j:7687

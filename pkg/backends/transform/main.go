@@ -29,6 +29,7 @@ func New(sq sqlite.Sqlite, n neo.Neo, m minio.Minio) (t Transformer, err error) 
 	return
 }
 
+/*
 func (t Transformer) NeoToSQLite() (err error) {
 	// Profile and Filter to SQLite
 	err = t.ProfilterToSqlite()
@@ -47,3 +48,4 @@ func (t Transformer) NeoToSQLite() (err error) {
 	}
 	return
 }
+*/
