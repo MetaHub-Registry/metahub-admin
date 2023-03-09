@@ -19,3 +19,6 @@ neo4j:
 logging:
   gelf: logstash:12201
   level: debug
+tracing:
+  name: "metahub-admin"
+  endpoint: "http://jaeger:14268/api/traces"
