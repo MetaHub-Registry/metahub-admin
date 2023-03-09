@@ -1,6 +1,6 @@
 #!/bin/bash
 set -ex
-go run main.go --config ${CFG_PATH:-./misc/config/compose-config.yaml} parse rules /community-edition/rules/
+go run main.go --config ${CFG_PATH:-./misc/config/compose-config.yaml} parse rules --empty-graph /community-edition/rules/
 go run main.go --config ${CFG_PATH:-./misc/config/compose-config.yaml} parse profiles /community-edition/profiles/
 if [[ -z ${SKIP_PARSE_MANIFESTS} ]];then
 	## Minio Ops
