@@ -93,8 +93,5 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
-replace github.com/metahub-registry/metahub-core => /Users/kniepbert/go/src/github.com/metahub-registry/metahub-core
 
-replace github.com/metahub-registry/metahub-core/pkg/types => /Users/kniepbert/go/src/github.com/metahub-registry/metahub-core/pkg/types
 
-replace github.com/metahub-registry/metahub-core/pkg/backends/magazine => /Users/kniepbert/go/src/github.com/metahub-registry/metahub-core/pkg/backends/magazine

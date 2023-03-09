@@ -1,4 +1,8 @@
 # syntax=docker/dockerfile:1.4
+FROM alpine:3.16.2 AS gonja
+RUN apk add --no-cache wget \
+ && wget -qO- https://gitlab.com/qnib-golang/gonja-cli/-/releases/v0.0.2/downloads/gonja-cli_0.0.2_linux_amd64.tar.gz |tar xfz - -C /usr/local/bin
+
 FROM alpine as certs
 RUN apk update && apk add ca-certificates
 
@@ -28,3 +32,7 @@ RUN --mount=type=cache,target=/go/pkg/mod go build -a -ldflags '-extldflags "-st
 FROM alpine:3.16.2
 RUN apk add ca-certificates
 COPY --from=go /go/metahub-admin/metahub-admin /usr/bin/metahub-admin
+COPY --from=gonja /usr/local/bin/gonja-cli /usr/local/bin/gonja-cli
+COPY ./misc/bin/run.sh /usr/bin/run.sh
+RUN chmod +x /usr/bin/run.sh
+COPY ./misc/tpl/metahub-admin.yaml.tpl /etc//metahub/metahub-admin.yaml.tpl
