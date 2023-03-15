@@ -54,7 +54,7 @@ func pCollectonCmd(cmd *cobra.Command, args []string) {
 		l.Error(err)
 	}
 
-	mag, err := magazine.NewMagazine(cmd, MH_TABLES)
+	mag, ctx, err := magazine.NewMagazine(cmd, MH_TABLES)
 	if err != nil {
 		l.Error(err)
 	}
@@ -132,9 +132,8 @@ func pCollectonCmd(cmd *cobra.Command, args []string) {
 				l.Error(err)
 				continue
 			}
-
 			//// Link Manifest to Config
-			err = mag.NeoLinkManifestToConfig(ctx, maniID, cfgID)
+			err = mag.NeoLinkManifestDataToConfig(ctx, maniID, cfgID)
 			if err != nil {
 				l.Error(err)
 				continue

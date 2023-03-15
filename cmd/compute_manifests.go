@@ -29,11 +29,13 @@ func init() {
 
 func cManifestsCmd(cmd *cobra.Command, args []string) {
 	config.SetCommandValues(cmd)
-	mag, err := magazine.NewMagazine(cmd, MH_TABLES)
+	mag, ctx, err := magazine.NewMagazine(cmd, MH_TABLES)
 	if err != nil {
 		logrus.Error(err)
 	}
-	err = mag.ComputeManifests()
+	ctx, span := tracer.Start(ctx, "cManifestsCmd")
+	defer span.End()
+	err = mag.ComputeManifests(ctx)
 	if err != nil {
 		logrus.Error(err)
 	}

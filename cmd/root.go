@@ -12,6 +12,7 @@ import (
 	"github.com/spf13/viper"
 	"github.com/metahub-registry/metahub-admin/pkg/config"
 	"github.com/metahub-registry/metahub-core/pkg/logging"
+	"go.opentelemetry.io/otel"
 )
 
 // rootCmd represents the base command when called without any subcommands
@@ -26,6 +27,7 @@ var (
 	}
 	neoConfig = config.NeoConfig{}
 	cfgFile   = ""
+	tracer    = otel.Tracer("metahub-admin/cmd")
 )
 
 // Execute adds all child commands to the root command and sets flags appropriately.
