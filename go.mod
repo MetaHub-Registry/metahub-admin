@@ -10,6 +10,7 @@ require (
 	github.com/spf13/pflag v1.0.5
 	github.com/spf13/viper v1.13.0
 	github.com/metahub-registry/metahub-core v0.0.0-00010101000000-000000000000
+	go.opentelemetry.io/otel v1.14.0
 	golang.org/x/crypto v0.1.0
 )
 
@@ -78,7 +79,6 @@ require (
 	github.com/subosito/gotenv v1.4.1 // indirect
 	github.com/testcontainers/testcontainers-go v0.15.0 // indirect
 	go.opencensus.io v0.23.0 // indirect
-	go.opentelemetry.io/otel v1.14.0 // indirect
 	go.opentelemetry.io/otel/exporters/jaeger v1.14.0 // indirect
 	go.opentelemetry.io/otel/sdk v1.14.0 // indirect
 	go.opentelemetry.io/otel/trace v1.14.0 // indirect
@@ -93,5 +93,4 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
-
-
+replace github.com/metahub-registry/metahub-core => /Users/kniepbert/go/src/github.com/metahub-registry/metahub-core

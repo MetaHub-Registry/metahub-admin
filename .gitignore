@@ -3,5 +3,6 @@ lcov.info
 coverage.txt
 metahub-admin
 gocd-*.env
+misc/config/aws.yaml
 coverage.xml
 misc/config/aws.yaml
