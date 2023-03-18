@@ -119,7 +119,7 @@ func pCollectonCmd(cmd *cobra.Command, args []string) {
 			}
 			//// 1. Manifest
 			// 1. Insert Manifest
-			maniID, err := mag.NeoInsertManifestData(ctx, msID, mani, "original")
+			maniID, err := mag.NeoInsertManifestData(ctx, msID, mani, "parsed")
 			mani.ID = maniID
 			if err != nil {
 				l.Error(err)

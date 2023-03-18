@@ -21,7 +21,7 @@ func init() {
 	// Cobra supports Persistent Flags which will work for this command
 	// and all subcommands, e.g.:
 	// parseCmd.PersistentFlags().String("foo", "", "A help for foo")
-
+	computeManifestsCmd.Flags().String("manifest", "", "manifest upstream to compute manifests for (e.g. dev:80/qnib/featuretest:latest, defaults to all)")
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
 	// parseCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
@@ -35,6 +35,17 @@ func cManifestsCmd(cmd *cobra.Command, args []string) {
 	}
 	ctx, span := tracer.Start(ctx, "cManifestsCmd")
 	defer span.End()
+	if m, ok := mag.Config.Args["manifest"]; ok && m != "" {
+		mani, err := mag.Database.Manifest_GetByLabel(ctx, m)
+		if err != nil {
+			logrus.Fatal(err)
+		}
+		err = mag.ComputeManifest(ctx, mani)
+		if err != nil {
+			logrus.Fatal(err)
+		}
+		return
+	}
 	err = mag.ComputeManifests(ctx)
 	if err != nil {
 		logrus.Error(err)

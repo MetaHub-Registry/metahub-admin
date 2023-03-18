@@ -15,6 +15,6 @@ for x in $@;do
 	go run main.go --config ${CFG_PATH:-./misc/config/compose-config.yaml} parse collections $x
 done
 echo "#### Compute Manifests"
-go run main.go --config ${CFG_PATH:-./misc/config/compose-config.yaml} compute manifests
+#go run main.go --config ${CFG_PATH:-./misc/config/compose-config.yaml} compute manifests
 echo "#### Compute ManifestList"
-go run main.go --config ${CFG_PATH:-./misc/config/compose-config.yaml} compute manifestlists
+#go run main.go --config ${CFG_PATH:-./misc/config/compose-config.yaml} compute manifestlists
