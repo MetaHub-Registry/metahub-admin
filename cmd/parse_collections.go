@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"context"
-	"os"
 
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
@@ -11,6 +10,7 @@ import (
 	"github.com/metahub-registry/metahub-admin/pkg/config"
 	"github.com/metahub-registry/metahub-core/pkg/backends/magazine"
 	"github.com/metahub-registry/metahub-core/pkg/types"
+	"github.com/metahub-registry/metahub-core/pkg/utils"
 	yamlCfg "github.com/metahub-registry/metahub-core/pkg/yaml/config"
 )
 
@@ -40,18 +40,18 @@ func pCollectonCmd(cmd *cobra.Command, args []string) {
 	})
 	ctx := context.Background()
 	config.SetCommandValues(cmd)
-	switch len(args) {
-	case 1:
-		dpath := args[0]
-		if _, err := os.Stat(dpath); os.IsNotExist(err) {
-			l.Errorf("Directory does not exists: %s", dpath)
-		}
-	default:
+	if len(args) == 0 {
 		l.Error("Please provide the directory to recursivly look for YAML files as the first argument")
 	}
-	cols, err := yamlCfg.FindManifestCollections(ctx, args[0])
-	if err != nil {
-		l.Error(err)
+	cols := make(map[string]yamlCfg.ManifestCollection, 0)
+	for _, a := range args {
+		cs, err := yamlCfg.FindManifestCollections(ctx, a)
+		if err != nil {
+			logrus.Error(err)
+		}
+		for _, c := range cs {
+			cols[c.Name] = c
+		}
 	}
 
 	mag, ctx, err := magazine.NewMagazine(cmd, MH_TABLES)
@@ -69,7 +69,7 @@ func pCollectonCmd(cmd *cobra.Command, args []string) {
 		}
 		l.Infof("Collection: %d / Tag: %d", colID, colTagID)
 		for _, m := range col.Manifests {
-			l.Infof("  Maninfest > %s", m.Image)
+			l.Infof("  Maninfest > [%s] %s", utils.ShortenDigest(m.Digest), m.Image)
 			// Fetch real Manifest from cache
 			mani, err := mag.GetManifest(ctx, m)
 			if err != nil {

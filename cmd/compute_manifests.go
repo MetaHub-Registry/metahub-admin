@@ -28,6 +28,10 @@ func init() {
 }
 
 func cManifestsCmd(cmd *cobra.Command, args []string) {
+	l := logrus.WithFields(logrus.Fields{
+		"package": "cmd/compute_manifest.go",
+		"func":    "cManifestsCmd",
+	})
 	config.SetCommandValues(cmd)
 	mag, ctx, err := magazine.NewMagazine(cmd, MH_TABLES)
 	if err != nil {
@@ -38,17 +42,17 @@ func cManifestsCmd(cmd *cobra.Command, args []string) {
 	if m, ok := mag.Config.Args["manifest"]; ok && m != "" {
 		mani, err := mag.Database.Manifest_GetByLabel(ctx, m)
 		if err != nil {
-			logrus.Fatal(err)
+			l.Fatal(err)
 		}
 		err = mag.ComputeManifest(ctx, mani)
 		if err != nil {
-			logrus.Fatal(err)
+			l.Fatal(err)
 		}
 		return
 	}
 	err = mag.ComputeManifests(ctx)
 	if err != nil {
-		logrus.Error(err)
+		l.Error(err)
 	}
 
 }

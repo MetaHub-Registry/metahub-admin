@@ -1,9 +1,7 @@
 package cmd
 
 import (
-	"context"
 	"fmt"
-	"os"
 
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
@@ -32,22 +30,18 @@ func init() {
 }
 
 func pProfilesCmd(cmd *cobra.Command, args []string) {
-	ctx := context.Background()
 	config.SetCommandValues(cmd)
-	switch len(args) {
-	case 1:
-		dpath := args[0]
-		if _, err := os.Stat(dpath); os.IsNotExist(err) {
-			logrus.Errorf("Directory does not exists: %s", dpath)
-		}
-	default:
+	if len(args) == 0 {
 		logrus.Error("Please provide the directory to recursivly look for YAML files as the first argument")
 	}
-	prfs, err := yamlCfg.FindProfiles(args[0])
-	if err != nil {
-		logrus.Error(err)
+	prfs := make([]yamlCfg.Profile, 0)
+	for _, a := range args {
+		ps, err := yamlCfg.FindProfiles(a)
+		if err != nil {
+			logrus.Error(err)
+		}
+		prfs = append(prfs, ps...)
 	}
-
 	mag, ctx, err := magazine.NewMagazine(cmd, "")
 	if err != nil {
 		logrus.Error(err)

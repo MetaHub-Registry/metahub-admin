@@ -1,9 +1,6 @@
 package cmd
 
 import (
-	"context"
-	"os"
-
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 
@@ -31,32 +28,41 @@ func init() {
 }
 
 func pRulesCmd(cmd *cobra.Command, args []string) {
-	ctx := context.Background()
 	config.SetCommandValues(cmd)
-	switch len(args) {
-	case 1:
-		dpath := args[0]
-		if _, err := os.Stat(dpath); os.IsNotExist(err) {
-			logrus.Errorf("Directory does not exists: %s", dpath)
-		}
-	default:
-		logrus.Error("Please provide the directory to recursivly look for YAML files as the first argument")
+	if len(args) == 0 {
+		logrus.Fatal("Please provide directories to recursivly look for YAML files as the first argument")
+
 	}
-	rls, err := yamlCfg.FindRules(args[0])
-	if err != nil {
-		logrus.Error(err)
+	rs := make([]yamlCfg.Rule, 0)
+	for _, a := range args {
+		rls, err := yamlCfg.FindRules(a)
+		if err != nil {
+			logrus.Error(err)
+		}
+		rs = append(rs, rls...)
 	}
 
 	mag, ctx, err := magazine.NewMagazine(cmd, "")
 	if err != nil {
 		logrus.Error(err)
 	}
-	if emptyGrah {
-		logrus.Info("Empty graph")
-		err = mag.Database.EmptyData(false)
+	switch emptyGrah {
+	case "all":
+		logrus.Info("Empty complete graph")
+		err = mag.Database.EmptyData(true)
 		if err != nil {
 			logrus.Error(err)
 		}
+	case "keep-upstream":
+		logrus.Info("Empty graph, but keep upstream")
+		err = mag.Database.EmptyData_KeepUpstream()
+		if err != nil {
+			logrus.Error(err)
+		}
+	case "none":
+		logrus.Info("Do not empty graph")
+	default:
+		logrus.Fatalf("unkown emptyGraph option '%s'", emptyGrah)
 	}
 	if emptyMinio {
 		logrus.Info("Empty minio")
@@ -65,7 +71,7 @@ func pRulesCmd(cmd *cobra.Command, args []string) {
 			logrus.Error(err)
 		}
 	}
-	for _, rl := range rls {
+	for _, rl := range rs {
 		r := rl.ToTypesRule()
 		logrus.Infof("Insert Rule: %s:%s (%s)", r.Name, r.Tag, r.Type)
 		_, err := mag.Database.Rule_GetCreate(ctx, r)
