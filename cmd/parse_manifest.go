@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"context"
-	"os"
 
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
@@ -25,7 +24,6 @@ func init() {
 	// Cobra supports Persistent Flags which will work for this command
 	// and all subcommands, e.g.:
 	// parseCmd.PersistentFlags().String("foo", "", "A help for foo")
-	parseManifestCmd.Flags().Bool("remove-manifests-alias", false, "Remove alias object in manifest (<reg>/<repo>/<tag> -> sha256)")
 	parseManifestCmd.Flags().Bool("skip-layer-download", false, "Do not download layers to object store")
 
 	// Cobra supports local flags which will only run when this command
@@ -36,30 +34,23 @@ func init() {
 func pManiCmd(cmd *cobra.Command, args []string) {
 	ctx := context.Background()
 	config.SetCommandValues(cmd)
-	switch len(args) {
-	case 1:
-		dpath := args[0]
-		if _, err := os.Stat(dpath); os.IsNotExist(err) {
-			logrus.Errorf("Directory does not exists: %s", dpath)
-		}
-	default:
+	if len(args) == 0 {
 		logrus.Error("Please provide the directory to recursivly look for YAML files as the first argument")
 	}
-	cols, err := yamlCfg.FindManifestCollections(ctx, args[0])
-	if err != nil {
-		logrus.Error(err)
+	cols := make(map[string]yamlCfg.ManifestCollection, 0)
+	for _, a := range args {
+		cs, err := yamlCfg.FindManifestCollections(ctx, a)
+		if err != nil {
+			logrus.Error(err)
+		}
+		for _, c := range cs {
+			cols[c.Name] = c
+		}
 	}
 
 	mag, ctx, err := magazine.NewMagazine(cmd, MH_TABLES)
 	if err != nil {
 		logrus.Error(err)
-	}
-	emtpyManiAlias, _ := cmd.Flags().GetBool("remove-manifests-alias")
-	if emtpyManiAlias {
-		err = mag.Minio.RemoveManifestAliases()
-		if err != nil {
-			logrus.Fatal(err)
-		}
 	}
 	skipLayerDownload, err := cmd.Flags().GetBool("skip-layer-download")
 	if err != nil {

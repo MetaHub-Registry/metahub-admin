@@ -1,11 +1,4 @@
+name: qnib/featuretest
+tag: arm64
 manifests:
-  - name: qnib/featuretest
-    tag: arm64
-    manifests:
-      - image: registry.gitlab.com/qnib-pub-containers/qnib/plain-featuretest:20220715-arm64-generic
-        platform:
-          os: linux
-          arch: arm64
-        annotations:
-          org.supercontainers.hardware.cpu.optimization.mode: architecure
-          org.supercontainers.hardware.cpu.optimization.target: aarch64
+  - image: registry.gitlab.com/qnib-pub-containers/qnib/plain-featuretest:20220715-arm64-generic

@@ -18,7 +18,7 @@ neo4j:
   url: bolt://neo4j:7687
 logging:
   gelf: logstash:12201
-  level: debug
+  level: info
 tracing:
   name: "metahub-admin"
   endpoint: "http://jaeger:14268/api/traces"
