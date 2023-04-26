@@ -22,7 +22,7 @@ go run main.go --config ${CFG_PATH:-./misc/config/compose-config.yaml} parse col
 
 echo "#### Compute Manifests"
 echo ">> go run main.go --config ${CFG_PATH:-./misc/config/compose-config.yaml} compute manifests"
-#go run main.go --config ${CFG_PATH:-./misc/config/compose-config.yaml} compute manifests
+go run main.go --config ${CFG_PATH:-./misc/config/compose-config.yaml} compute manifests
 echo "#### Compute ManifestList"
 echo ">> go run main.go --config ${CFG_PATH:-./misc/config/compose-config.yaml} compute manifestlists"
-#go run main.go --config ${CFG_PATH:-./misc/config/compose-config.yaml} compute manifestlists
+go run main.go --config ${CFG_PATH:-./misc/config/compose-config.yaml} compute manifestlists

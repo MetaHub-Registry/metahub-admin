@@ -5,9 +5,6 @@ manifests:
     platform:
       os: linux
       arch: amd64
-    annotations:
-      org.supercontainers.hardware.cpu.target: platform
   - image: registry.gitlab.com/qnib-pub-containers/qnib/plain-featuretest:20220715-amd64-generic
     annotations:
-      org.supercontainers.hardware.cpu.target: platform
       org.supercontainers.mpi.implementation: mpich
