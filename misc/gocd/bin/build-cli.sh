@@ -27,6 +27,7 @@ else
    echo "ERROR: No DEPLOYMENT branch set"
    exit 1
 fi
-
 go mod edit -replace github.com/metahub-registry/metahub-core=${PWD}/ext/metalib
+go mod tidy
+
 go build -o ${TOPDIR}/metahub-admin

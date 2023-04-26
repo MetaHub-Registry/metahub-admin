@@ -32,10 +32,10 @@ echo " CE ready in ${YAMLPATH}"
 
 set -xe
 ## Minio Ops
-metahub-admin parse --config ./misc/config/compose-config.yaml manifests --remove-manifests-alias  $YAMLPATH/collections
+metahub-admin parse --config ./misc/config/compose-config.yaml manifests $YAMLPATH/collections
 
 ## Neo4j Ops
-metahub-admin parse --config ./misc/config/compose-config.yaml profiles  --empty-graph $YAMLPATH/profiles
+metahub-admin parse --config ./misc/config/compose-config.yaml profiles --empty-graph=keep-upstream $YAMLPATH/profiles
 metahub-admin parse --config ./misc/config/compose-config.yaml collections $YAMLPATH/collections
 metahub-admin --config ./misc/config/compose-config.yaml compute manifestlists
 

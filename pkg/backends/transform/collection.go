@@ -1,12 +1,14 @@
 package transform
 
 import (
+	"context"
+
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 )
 
-func (t Transformer) CollectionToSqlite() (err error) {
-	cols, err := t.Neo.GetAllCollections()
+func (t Transformer) CollectionToSqlite(ctx context.Context) (err error) {
+	cols, err := t.Neo.GetAllCollections(ctx)
 	if err != nil {
 		return
 	}

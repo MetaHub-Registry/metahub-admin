@@ -62,7 +62,7 @@ func pCollectonCmd(cmd *cobra.Command, args []string) {
 	for _, col := range cols {
 		l.Infof("# Col: %s:%s", col.Name, col.Tag)
 		// Create Collection
-		colID, colTagID, err := mag.CreateCollection(col)
+		colID, colTagID, err := mag.CreateCollection(ctx, col)
 		if err != nil {
 			l.Error(err)
 			continue
@@ -101,6 +101,7 @@ func pCollectonCmd(cmd *cobra.Command, args []string) {
 				l.Error(err)
 				continue
 			}
+			mani.Config.ID = cfgID
 			l.Warnf("  configID: %d", cfgID)
 			// 4. Insert Layers
 			for _, layer := range mani.Layers {
@@ -133,7 +134,7 @@ func pCollectonCmd(cmd *cobra.Command, args []string) {
 				continue
 			}
 			//// Link Manifest to Config
-			err = mag.NeoLinkManifestDataToConfig(ctx, maniID, cfgID)
+			err = mag.NeoLinkManifestDataToConfig(ctx, maniID, mani.Config)
 			if err != nil {
 				l.Error(err)
 				continue
