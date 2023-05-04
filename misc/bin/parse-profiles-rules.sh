@@ -1,10 +1,15 @@
 #!/bin/bash
 set -ex
 go run main.go --config ${CFG_PATH:-./misc/config/compose-config.yaml} parse --empty-graph=${EMPTY_GRAPH:-none} rules \
-	/community-edition/rules/cpu/zen3.yaml /community-edition/rules/cpu/zen.yaml \
+	/community-edition/rules/cpu/zen.yaml \
+	/community-edition/rules/cpu/zen2.yaml \
+	/community-edition/rules/cpu/zen3.yaml \
 	/community-edition/rules/os/linux.yaml /community-edition/rules/cpu/noop.yaml 
 go run main.go --config ${CFG_PATH:-./misc/config/compose-config.yaml} parse profiles \
-	/community-edition/profiles/generic.yaml /community-edition/profiles/cpu/zen3.yaml  /community-edition/profiles/cpu/zen.yaml
+	/community-edition/profiles/generic.yaml \
+	/community-edition/profiles/cpu/zen3.yaml \
+	/community-edition/profiles/cpu/zen2.yaml \
+	/community-edition/profiles/cpu/zen.yaml
 
 if [[ -z ${1} ]];then
     echo "#### No collection to parse"
