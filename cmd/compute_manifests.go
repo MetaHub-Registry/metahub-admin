@@ -46,7 +46,7 @@ func cManifestsCmd(cmd *cobra.Command, args []string) {
 	ctx, span := tracer.Start(ctx, "cManifestsCmd")
 	defer span.End()
 	if m, ok := mag.Config.Args["manifest"]; ok && m != "" {
-		mani, e := mag.Database.Manifest_GetByLabel(ctx, m)
+		mani, _, e := mag.Database.Manifest_GetByLabel(ctx, m)
 		if e != nil {
 			msg := "Manifest_GetByLabel failed"
 			err = errors.Wrap(e, msg)
