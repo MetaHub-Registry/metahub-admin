@@ -1,4 +1,11 @@
 #!/bin/bash
+
+
+if [[ "$1" == "local" ]];then
+  SONAR_QUBE_URL=${SONAR_QUBE_URL_LOCAL}
+  SONAR_QUBE_TOKEN=${SONAR_QUBE_TOKEN_LOCAL}
+fi
+
 set -x 
 
 sonar-scanner \
