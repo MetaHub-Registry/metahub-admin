@@ -3,7 +3,7 @@ FROM alpine:3.17.3 AS gonja
 RUN apk add --no-cache wget \
  && wget -qO- https://gitlab.com/qnib-golang/gonja-cli/-/releases/v0.0.2/downloads/gonja-cli_0.0.2_linux_amd64.tar.gz |tar xfz - -C /usr/local/bin
 
-FROM alpine as certs
+FROM alpine AS certs
 RUN apk update && apk add ca-certificates
 
 FROM golang:1.20.3 AS cbuilder
