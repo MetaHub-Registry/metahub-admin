@@ -6,3 +6,7 @@ gocd-*.env
 misc/config/aws.yaml
 coverage.xml
 misc/config/aws.yaml
+.env
+.scannerwork
+misc/compose/sonarqube/**
+**/.DS_Store

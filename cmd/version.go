@@ -4,50 +4,36 @@ Copyright © 2022 NAME HERE <EMAIL ADDRESS>
 package cmd
 
 import (
-	"encoding/json"
 	"fmt"
-	"log"
-	"strconv"
-	"strings"
 
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
+	"github.com/metahub-registry/metahub-admin/pkg/utils"
 	mlver "github.com/metahub-registry/metahub-core/pkg/version"
 )
 
-var version = "1.2.5"
+var version = "1.2.6"
 var jsonFlag bool
-
-type Version struct {
-	Major int `json:"major"`
-	Minor int `json:"minor"`
-	Patch int `json:"patch"`
-}
 
 // parseCmd represents the parse command
 var versionCmd = &cobra.Command{
 	Use:   "version",
 	Short: "Prints the version of the application",
 	Run: func(cmd *cobra.Command, args []string) {
+		maVer, e := utils.NewVersion(version)
+		if e != nil {
+			logrus.Fatalf("Failed to parse version: %v", e)
+		}
+		mlVer, e := utils.NewVersion(mlver.Version)
+		if e != nil {
+			logrus.Fatalf("Failed to parse version: %v", e)
+		}
 		if jsonFlag {
-			vSplit := strings.Split(version, ".")
-			major, _ := strconv.Atoi(vSplit[0])
-			minor, _ := strconv.Atoi(vSplit[1])
-			patch, _ := strconv.Atoi(vSplit[2])
-			v := Version{
-				Major: major,
-				Minor: minor,
-				Patch: patch,
-			}
-			b, err := json.Marshal(v) //, "", "\t")
-			if err != nil {
-				log.Fatal(err)
-			}
-
-			fmt.Println(string(b))
+			ma := maVer.ToJson()
+			fmt.Println(string(ma))
 		} else {
-			fmt.Printf("Admin:   v%s\n", version)
-			fmt.Printf("Metalib: v%s\n", mlver.Version)
-
+			fmt.Printf("Admin:   v%s\n", maVer.ToString())
+			fmt.Printf("Metalib: v%s\n", mlVer.ToString())
 		}
 	},
 }

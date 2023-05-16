@@ -79,7 +79,7 @@ func pCollectonCmd(cmd *cobra.Command, args []string) {
 			}
 			// Make sure the (standin) Manifest is present
 			ms := types.ManifestFromManifestData(mani)
-			msID, err := mag.Database.Manifest_GetInsert(ctx, ms)
+			msID, err := mag.Database.ManifestGetInsert(ctx, ms.Upstream, ms.Annotations.ToSlice()...)
 			if err != nil {
 				l.Error(err)
 				continue
