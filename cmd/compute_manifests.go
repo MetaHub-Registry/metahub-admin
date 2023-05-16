@@ -1,8 +1,14 @@
 package cmd
 
 import (
+	"fmt"
+
+	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/codes"
+	"go.opentelemetry.io/otel/trace"
 
 	"github.com/metahub-registry/metahub-admin/pkg/config"
 	"github.com/metahub-registry/metahub-core/pkg/backends/magazine"
@@ -40,19 +46,43 @@ func cManifestsCmd(cmd *cobra.Command, args []string) {
 	ctx, span := tracer.Start(ctx, "cManifestsCmd")
 	defer span.End()
 	if m, ok := mag.Config.Args["manifest"]; ok && m != "" {
-		mani, err := mag.Database.Manifest_GetByLabel(ctx, m)
-		if err != nil {
-			l.Fatal(err)
+		mani, _, e := mag.Database.ManifestGetByLabel(ctx, m)
+		if e != nil {
+			msg := "Manifest_GetByLabel failed"
+			err = errors.Wrap(e, msg)
+			span.SetStatus(codes.Error, err.Error())
+			span.AddEvent("log", trace.WithAttributes(
+				attribute.String("log.severity", "error"),
+				attribute.String("log.message", msg),
+			))
+			span.RecordError(err)
+			l.Fatal(msg)
 		}
-		err = mag.ComputeManifest(ctx, mani)
-		if err != nil {
-			l.Fatal(err)
+		e = mag.ComputeManifest(ctx, mani)
+		if e != nil {
+			msg := fmt.Sprintf("ComputeManifest '%s' failed", mani.Upstream.String())
+			err = errors.Wrap(e, msg)
+			span.SetStatus(codes.Error, err.Error())
+			span.AddEvent("log", trace.WithAttributes(
+				attribute.String("log.severity", "error"),
+				attribute.String("log.message", msg),
+			))
+			span.RecordError(err)
+			l.Fatal(msg)
 		}
 		return
 	}
-	err = mag.ComputeManifests(ctx)
-	if err != nil {
-		l.Error(err)
+	e := mag.ComputeManifests(ctx)
+	if e != nil {
+		msg := "ComputeManifests failed"
+		err = errors.Wrap(e, msg)
+		span.SetStatus(codes.Error, err.Error())
+		span.AddEvent("log", trace.WithAttributes(
+			attribute.String("log.severity", "error"),
+			attribute.String("log.message", msg),
+		))
+		span.RecordError(err)
+		l.Fatal(msg)
 	}
 
 }
