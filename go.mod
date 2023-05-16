@@ -3,6 +3,7 @@ module github.com/metahub-registry/metahub-admin
 go 1.18
 
 require (
+	github.com/magiconair/properties v1.8.7
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/pkg/errors v0.9.1
 	github.com/sirupsen/logrus v1.9.0
@@ -47,7 +48,6 @@ require (
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/klauspost/compress v1.16.4 // indirect
 	github.com/klauspost/cpuid/v2 v2.1.1 // indirect
-	github.com/magiconair/properties v1.8.7 // indirect
 	github.com/mattn/go-sqlite3 v1.14.16 // indirect
 	github.com/mgudov/logic-expression-parser v0.1.2 // indirect
 	github.com/minio/md5-simd v1.1.2 // indirect
