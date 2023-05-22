@@ -1,19 +1,18 @@
 #!/bin/bash
+: "${CFG_PATH:=./misc/config/compose-config.yaml}"
+: "${EMPTY_GRAPH:=keep-upstream}"
 
-DBFILE=$1
-YAMLDIR=$2
-if [ -z "$DBFILE" ] && [ -z $YAMLDIR ]; then
-    echo "Usage: $0 <dbfile> <yaml_dir>/(users|profiles)"
+YAMLDIR=$1
+if [ -z $YAMLDIR ]; then
+    echo "Usage: $0 <yaml_dir> <manifest_dir>"
     exit 1
 fi
 
-if [ -f "$DBFILE" ]; then
-    read -r -p "File '${DBFILE} already exist, are you sure? [y/N] " response
-    if [[ "$response" =~ ^([yY][eE][sS]|[yY])$ ]]
-    then
-        rm -f $1
-    fi
-fi
-go run main.go --config misc/config/local.yaml parse users --metahub-db=${DBFILE} ${YAMLDIR}/users
-go run main.go --config misc/config/local.yaml parse profiles --metahub-db=${DBFILE} ${YAMLDIR}/profiles
-go run main.go --config misc/config/local.yaml sqlite --metahub-db=${DBFILE}
+go run main.go --config ${CFG_PATH} parse rules --empty-graph=${EMPTY_GRAPH}  ${YAMLDIR}/rules
+go run main.go --config ${CFG_PATH} parse manipulations ${YAMLDIR}/manipulations
+go run main.go --config ${CFG_PATH} parse profiles ${YAMLDIR}/profiles
+
+go run main.go --config ${CFG_PATH} parse manifests $2
+go run main.go --config ${CFG_PATH} parse collections $2
+go run main.go --config ${CFG_PATH} compute manifests
+go run main.go --config ${CFG_PATH} compute manifestlists

@@ -12,6 +12,7 @@ ${MHA} --config ${CFG_PATH:-./misc/config/compose-config.yaml} parse --empty-gra
 	/community-edition/rules/cpu/zen.yaml \
 	/community-edition/rules/cpu/zen2.yaml \
 	/community-edition/rules/cpu/zen3.yaml \
+	/community-edition/rules/platform/arch/arm64.yaml \
 	/community-edition/rules/os/linux.yaml /community-edition/rules/cpu/noop.yaml 
 ${MHA} --config ${CFG_PATH:-./misc/config/compose-config.yaml} parse profiles \
 	/community-edition/profiles/generic.yaml \

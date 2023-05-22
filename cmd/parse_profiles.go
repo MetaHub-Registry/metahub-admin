@@ -52,7 +52,7 @@ func pProfilesCmd(cmd *cobra.Command, args []string) {
 			label = prf.Tag
 		}
 		logrus.Infof("Insert profile: %s", label)
-		p, _ := prf.ToProfile()
+		p, _ := mag.Database.ProfileFromYAML(ctx, prf)
 		err := mag.Database.Profile_GetInsert(ctx, &p)
 		if err != nil {
 			logrus.Fatal(err)
