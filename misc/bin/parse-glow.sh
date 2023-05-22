@@ -8,15 +8,19 @@ if [[ $? -ne 0 || ! -z "${RUN_GO}" ]];then
 fi
 
 set -ex
+echo ">> ${MHA} --config ${CFG_PATH:-./misc/config/compose-config.yaml} parse --empty-graph=${EMPTY_GRAPH:-keep-upstream} rules"
 ${MHA} --config ${CFG_PATH:-./misc/config/compose-config.yaml} parse --empty-graph=${EMPTY_GRAPH:-keep-upstream} rules \
 	/community-edition/rules/platform/arch/arm64.yaml \
 	/community-edition/rules/platform/arch/amd64.yaml \
-	/community-edition/rules/os/linux.yaml /community-edition/rules/cpu/noop.yaml 
+	/community-edition/rules/os/linux.yaml /community-edition/rules/cpu/noop.yaml
+
+echo ">> ${MHA} --config ${CFG_PATH:-./misc/config/compose-config.yaml} parse manipulations"
 ${MHA} --config ${CFG_PATH:-./misc/config/compose-config.yaml} parse manipulations \
-    community-edition/manipulations/layer/glow/1.5.0-arm64.yaml
+    /community-edition/manipulations/layer/glow/1.5.0.yaml  \
+echo ">> ${MHA} --config ${CFG_PATH:-./misc/config/compose-config.yaml} parse profiles"
 ${MHA} --config ${CFG_PATH:-./misc/config/compose-config.yaml} parse profiles \
 	/community-edition/profiles/generic.yaml \
-	/community-edition/profiles/glow/1.5.0-arm64.yaml
+	/community-edition/profiles/glow/1.5.0.yaml
 
 if [[ -z ${1} ]];then
     echo "#### No collection to parse"
@@ -30,7 +34,7 @@ fi
 ## Neo4j Ops
 echo "#### Parse Manifest $x"
 echo ">> ${MHA} --config ${CFG_PATH:-./misc/config/compose-config.yaml} parse collections $@"
-#${MHA} --config ${CFG_PATH:-./misc/config/compose-config.yaml} parse collections $@
+${MHA} --config ${CFG_PATH:-./misc/config/compose-config.yaml} parse collections $@
 
 echo "#### Compute Manifests"
 echo ">> go run main.go --config ${CFG_PATH:-./misc/config/compose-config.yaml} compute manifests"

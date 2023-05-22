@@ -6,6 +6,7 @@ import (
 
 	"github.com/metahub-registry/metahub-admin/pkg/config"
 	"github.com/metahub-registry/metahub-core/pkg/backends/magazine"
+	"github.com/metahub-registry/metahub-core/pkg/types"
 	yamlCfg "github.com/metahub-registry/metahub-core/pkg/yaml/config"
 )
 
@@ -54,28 +55,28 @@ func pManipulationsCmd(cmd *cobra.Command, args []string) {
 			logrus.Error(err)
 		}
 	}
-	for _, mp := range res {
-		m := mp.ToTypesManipulation()
-		logrus.Infof("Insert Manipulation: %s", m.Label)
-		for idx, l := range m.ManipuLayers {
-			logrus.Infof("  - %s (Up: %s)", l.Label, l.Image.GetLabel())
-			if err = mag.HeadUpstream(ctx, &l.Image); err != nil {
-				logrus.Fatal(err)
-			}
-			if err = mag.CacheUpstream(ctx, l.Image); err != nil {
-				logrus.Fatal(err)
-			}
-			upID, err := mag.NeoInsertUpstream(ctx, l.Image)
+
+	for _, cfgMp := range res {
+		/// Fetch Upstream first
+		for _, mpl := range cfgMp.ManipuLayers {
+			up, err := types.NewUpstreamByName(mpl.Image)
 			if err != nil {
 				logrus.Fatal(err)
 			}
-			l.Image.ID = upID
-			m.ManipuLayers[idx] = l
+			if err = mag.CacheUpstream(ctx, up); err != nil {
+				logrus.Fatal(err)
+			}
 		}
-		_, err := mag.Database.ManipulationGetCreate(ctx, m)
+		mp, e := mag.Database.ManipulationFromYAML(ctx, cfgMp)
+		if e != nil {
+			logrus.Fatal(e)
+		}
+		logrus.Infof("Insert Manipulation: %s", mp.Label)
+		mpID, err := mag.ManipulationGetCreate(ctx, mp)
 		if err != nil {
 			logrus.Fatal(err)
 		}
+		logrus.Infof("Manipulation %s has ID %d", mp.Label, mpID)
 		// TODO: Check for upstream layers in Minio?
 
 	}

@@ -1,4 +1,4 @@
 name: qnib/featuretest
 tag: arm64
 manifests:
-  - image: registry.gitlab.com/qnib-pub-containers/qnib/plain-featuretest:20220715-arm64-generic
+  - image: registry:5050/qnib-pub-containers/qnib/plain-featuretest:20220715-arm64-generic

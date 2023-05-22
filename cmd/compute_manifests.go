@@ -12,6 +12,7 @@ import (
 
 	"github.com/metahub-registry/metahub-admin/pkg/config"
 	"github.com/metahub-registry/metahub-core/pkg/backends/magazine"
+	"github.com/metahub-registry/metahub-core/pkg/utils"
 )
 
 var computeManifestsCmd = &cobra.Command{
@@ -46,6 +47,7 @@ func cManifestsCmd(cmd *cobra.Command, args []string) {
 	ctx, span := tracer.Start(ctx, "cManifestsCmd")
 	defer span.End()
 	if m, ok := mag.Config.Args["manifest"]; ok && m != "" {
+		utils.Info(l, span, "Compute manifest '%s'", m)
 		mani, _, e := mag.Database.ManifestGetByLabel(ctx, m)
 		if e != nil {
 			msg := "Manifest_GetByLabel failed"
@@ -72,7 +74,7 @@ func cManifestsCmd(cmd *cobra.Command, args []string) {
 		}
 		return
 	}
-	e := mag.ComputeManifests(ctx)
+	e := mag.ComputeAllManifests(ctx)
 	if e != nil {
 		msg := "ComputeManifests failed"
 		err = errors.Wrap(e, msg)
