@@ -2,5 +2,5 @@ username: qnib
 email: christian@qnib.org
 first_name: Christian
 last_name: Kniep
-hash: "$2a$12$mZiU1nErL.x2q3UHa/zYje9Pcgpo6t5QH7M3a5aEgILzJdq/CpZre"
+password: "mypassword"
 role: admin
