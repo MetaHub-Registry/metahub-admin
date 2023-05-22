@@ -6,7 +6,6 @@ import (
 
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
-	"golang.org/x/crypto/bcrypt"
 
 	"github.com/metahub-registry/metahub-admin/pkg/config"
 	"github.com/metahub-registry/metahub-core/pkg/backends/magazine"
@@ -56,27 +55,19 @@ func uParseCmd(cmd *cobra.Command, args []string) {
 	}
 	defer mag.UserManagement.Close()
 	for _, user := range users {
+		s := types.Secret{
+			Name: "password",
+			Key:  user.Password,
+		}
 		u := types.User{
 			Username:  user.Username,
 			FirstName: user.FirstName,
 			LastName:  user.LastName,
 			Email:     user.Email,
 			Role:      user.Role,
+			Secrets:   []types.Secret{s},
 		}
-		switch {
-		case (user.Hash != "") && (user.Password != ""):
-			logrus.Errorf("User '%s' has both 'hash' and 'password' set. Please remove one of them.", user.Username)
-			continue
-		case user.Hash != "":
-			u.PasswordHash = user.Hash
-		case user.Password != "":
-			hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), 12)
-			if err != nil {
-				logrus.Errorf("Error while hashing password for user '%s': %s", user.Username, err)
-				continue
-			}
-			u.PasswordHash = string(hashedPassword)
-		}
+
 		err := mag.InsertUser(ctx, u)
 		if err != nil {
 			logrus.Error(err)

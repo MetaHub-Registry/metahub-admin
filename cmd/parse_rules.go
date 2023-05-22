@@ -53,9 +53,15 @@ func pRulesCmd(cmd *cobra.Command, args []string) {
 		if err != nil {
 			logrus.Error(err)
 		}
-	case "keep-upstream":
+	case "keep-upstream-only":
 		logrus.Info("Empty graph, but keep upstream")
 		err = mag.Database.EmptyData_KeepUpstream()
+		if err != nil {
+			logrus.Error(err)
+		}
+	case "keep-upstream":
+		logrus.Info("Empty graph, but keep upstream,layer, and config")
+		err = mag.Database.EmptyDataKeepUpstreamConfigLayer()
 		if err != nil {
 			logrus.Error(err)
 		}
