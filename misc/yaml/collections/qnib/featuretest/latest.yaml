@@ -32,7 +32,7 @@ manifests:
       os: linux
       arch: arm64
       features: [graviton2]
-  - image: registry.gitlab.com/qnib-pub-containers/qnib/plain-featuretest:20220715-arm64-graviton2
+  - image: registry.gitlab.com/qnib-pub-containers/qnib/plain-featuretest:20220715-arm64-graviton3
     platform:
       os: linux
       arch: arm64

@@ -34,20 +34,19 @@ func pManipulationsCmd(cmd *cobra.Command, args []string) {
 		logrus.Fatal("Please provide directories to recursivly look for YAML files as the first argument")
 
 	}
-	res := make([]yamlCfg.Manipulation, 0)
-	for _, a := range args {
-		mps, err := yamlCfg.FindManipulations(a)
-		if err != nil {
-			logrus.Error(err)
-		}
-		res = append(res, mps...)
-	}
-
 	mag, ctx, err := magazine.NewMagazine(cmd, "")
 	if err != nil {
 		logrus.Error(err)
 	}
 
+	res := make([]yamlCfg.Manipulation, 0)
+	for _, a := range args {
+		mps, err := yamlCfg.FindManipulations(ctx, a)
+		if err != nil {
+			logrus.Error(err)
+		}
+		res = append(res, mps...)
+	}
 	if emptyMinio {
 		logrus.Info("Empty minio")
 		err = mag.Minio.EmptyAll()
@@ -77,7 +76,6 @@ func pManipulationsCmd(cmd *cobra.Command, args []string) {
 			logrus.Fatal(err)
 		}
 		logrus.Infof("Manipulation %s has ID %d", mp.Label, mpID)
-		// TODO: Check for upstream layers in Minio?
 
 	}
 
