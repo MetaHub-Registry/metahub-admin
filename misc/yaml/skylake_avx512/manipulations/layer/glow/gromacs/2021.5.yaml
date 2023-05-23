@@ -1,0 +1,18 @@
+label: layer/glow/gromacs#2021.5
+layers:
+  - image: quay.io/cqnib/metahub-layers/hpc3/gromacs:2021.5-arm64
+    rule: arch:arm64=true
+    cmd: 
+      - rule: prepend
+        value: hpc3-help
+    environment:
+      - key: HPC3_HELP
+        rule: ifNULL
+  - image: quay.io/cqnib/metahub-layers/hpc3/gromacs:2021.5-amd64
+    rule: arch:amd64=true
+    cmd: 
+      - rule: prepend
+        value: hpc3-help
+    environment:
+      - key: HPC3_HELP
+        rule: ifNULL
