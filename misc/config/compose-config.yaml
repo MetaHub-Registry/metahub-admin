@@ -11,6 +11,8 @@ minio:
     bucket: configs
   layers:
     bucket: layers
+registries:
+  - "registry:5050"
 neo4j:
   dbname: neo4j
   user: neo4j

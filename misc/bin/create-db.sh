@@ -13,5 +13,4 @@ if [ -f "$DBFILE" ]; then
     fi
 fi
 
-go run main.go --config misc/config/metahub-admin.yaml parse users --metahub-db=${DBFILE} misc/yaml/users
-go run main.go --config misc/config/metahub-admin.yaml sqlite --metahub-db=${DBFILE}
+go run main.go --config misc/config/metahub-admin.yaml parse users --user-db=${DBFILE} misc/yaml/users
