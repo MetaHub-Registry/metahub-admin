@@ -1,4 +1,0 @@
-# optional name and tag, must match with POSIX path and file name (tag)
-name: awscli
-tag: broken
-config: test
