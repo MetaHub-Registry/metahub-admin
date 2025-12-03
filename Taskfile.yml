@@ -1,0 +1,18 @@
+version: '3'
+
+dotenv: ['.env']
+tasks:
+  git:
+    cmds:
+      - git add .
+      - git commit -am "{{.CLI_ARGS}}"
+  bump:*:
+    vars:
+      LEVEL: '{{index .MATCH 0}}'
+    preconditions:
+      - sh: '[ "{{.LEVEL}}" = "patch" ] || [ "{{.LEVEL}}" = "minor" ] || [ "{{.LEVEL}}" = "major" ]'
+        msg: "CLI_ARGS must be one of: patch, minor, major"
+    cmds:
+      - bumpversion {{.LEVEL}}
+      - git push 
+      - git push --tags
