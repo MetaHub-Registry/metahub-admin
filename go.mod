@@ -1,6 +1,6 @@
 module github.com/metahub-registry/metahub-admin
 
-go 1.18
+go 1.24
 
 require (
 	github.com/magiconair/properties v1.8.7
