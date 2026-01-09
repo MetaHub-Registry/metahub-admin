@@ -16,3 +16,6 @@ tasks:
       - bumpversion {{.LEVEL}}
       - git push 
       - git push --tags
+  build:
+    cmds:
+      - docker buildx build . --build-context metalib=../metahub-core --platform linux/amd64,linux/arm64 -t registry.github.com/metahub-registry/metahub-admin:$(git describe --tags --abbrev=0) --push

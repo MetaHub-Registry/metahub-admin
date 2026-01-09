@@ -7,10 +7,8 @@ minio:
   ssl: {{ MINIO_SSL|default("false") }}
   manifests:
     bucket: {{ MINIO_BUCKET_MANIFESTS|default("manifests") }}
-  configs:
-    bucket: {{ MINIO_BUCKET_CONFIGS|default("configs") }}
-  layers:
-    bucket: {{ MINIO_BUCKET_LAYERS|default("layers") }}
+  blobs:
+    bucket: {{ MINIO_BUCKET_BLOBS|default("blobs") }}
 
 neo4j:
   dbname: neo4j
