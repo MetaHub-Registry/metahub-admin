@@ -25,7 +25,11 @@ if [[ -z ${GITLAB_REPO_RO} ]];then
     exit 1
 fi
 
-if [[ "${DEPLOYMENT}" == "dev" ]];then
+if [[ -f metalib.tar ]];then
+   echo "> Extracting metalib.tar"
+   mkdir -p ext
+   tar -xf metalib.tar -C ext
+elif [[ "${DEPLOYMENT}" == "dev" ]];then
    echo "> git clone --branch=develop https://gitlab-ci-token:GITLAB_REPO_RO@github.com/metahub-registry/metahub-core ext/metalib"
    git clone --branch=develop https://gitlab-ci-token:${GITLAB_REPO_RO}@github.com/metahub-registry/metahub-core ext/metalib
 elif [[ "${DEPLOYMENT}" == "prod" ]];then
