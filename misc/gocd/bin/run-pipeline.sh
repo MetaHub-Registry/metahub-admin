@@ -36,8 +36,7 @@ fetchPipelineArtefact "Deploy" "Setup" "misc/gocd/bin/test.env"
 export $(grep -v '^#' test.env | xargs)
 ## Set S3 Options
 export MINIO_URL=s3.amazonaws.com
-export MINIO_BUCKET_CONFIGS=metahub-prod-configs
-export MINIO_BUCKET_LAYERS=metahub-prod-layers
+export MINIO_BUCKET_BLOBS=metahub-prod-blobs
 export MINIO_BUCKET_MANIFESTS=metahub-prod-manifests
 export MINIO_REGION=eu-west-1
 export MINIO_USER=${AWS_ACCESS_KEY}

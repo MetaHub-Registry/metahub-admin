@@ -143,7 +143,7 @@ func pCollectonCmd(cmd *cobra.Command, args []string) {
 			for k, v := range mani.Config.Cfg.Config.Labels {
 				logrus.Warnf("  Label: %s=%s", k, v)
 				a := types.NewAnnotation(k, v)
-				mag.Config_AddLabel(ctx, cfgID, a)
+				mag.ConfigAddLabel(ctx, cfgID, a)
 			}
 
 			///// Annotations
