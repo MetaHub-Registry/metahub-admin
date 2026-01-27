@@ -50,7 +50,7 @@ func cManifestsCmd(cmd *cobra.Command, args []string) {
 		utils.Info(l, span, "Compute manifest '%s'", m)
 		mani, _, e := mag.Database.ManifestGetByLabel(ctx, m)
 		if e != nil {
-			msg := "Manifest_GetByLabel failed"
+			msg := "ManifestGetByLabel failed"
 			err = errors.Wrap(e, msg)
 			span.SetStatus(codes.Error, err.Error())
 			span.AddEvent("log", trace.WithAttributes(

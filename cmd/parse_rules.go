@@ -55,7 +55,7 @@ func pRulesCmd(cmd *cobra.Command, args []string) {
 		}
 	case "keep-upstream-only":
 		logrus.Info("Empty graph, but keep upstream")
-		err = mag.Database.EmptyData_KeepUpstream()
+		err = mag.Database.EmptyDataKeepUpstream()
 		if err != nil {
 			logrus.Error(err)
 		}
@@ -80,7 +80,7 @@ func pRulesCmd(cmd *cobra.Command, args []string) {
 	for _, rl := range rs {
 		r := rl.ToTypesRule()
 		logrus.Infof("Insert Rule: %s:%s (%s)", r.Name, r.Tag, r.Type)
-		_, err := mag.Database.Rule_GetCreate(ctx, r)
+		_, err := mag.Database.RuleGetCreate(ctx, r)
 		if err != nil {
 			logrus.Fatal(err)
 		}

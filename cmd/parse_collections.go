@@ -84,17 +84,7 @@ func pCollectonCmd(cmd *cobra.Command, args []string) {
 				l.Error(err)
 				continue
 			}
-			// 1. Insert Platform
-			platID, err := mag.NeoInsertPlatform(ctx, mani.Platform)
-			if err != nil {
-				l.Error(err)
-				continue
-			}
-			err = mag.Database.LinkManifestToPlatform(ctx, msID, platID)
-			if err != nil {
-				l.Error(err)
-				continue
-			}
+
 			/// 1. Insert Config
 			cfgID, err := mag.InsertConfig(ctx, mani.Config, mani.Upstream)
 			if err != nil {
@@ -120,13 +110,24 @@ func pCollectonCmd(cmd *cobra.Command, args []string) {
 			}
 			//// 1. Manifest
 			// 1. Insert Manifest
-			maniID, err := mag.NeoInsertManifestData(ctx, msID, mani, "parsed")
-			mani.ID = maniID
+			maniDataID, err := mag.NeoInsertManifestData(ctx, msID, mani, "parsed")
+			mani.ID = maniDataID
 			if err != nil {
 				l.Error(err)
 				continue
 			}
-			//l.Warnf("  ManifestID: %d", maniID)
+			// 1. Insert Platform
+			platID, err := mag.NeoInsertPlatform(ctx, mani.Platform)
+			if err != nil {
+				l.Error(err)
+				continue
+			}
+			err = mag.Database.LinkManifestDataToPlatform(ctx, maniDataID, platID)
+			if err != nil {
+				l.Error(err)
+				continue
+			}
+			//l.Warnf("  ManifestID: %d", maniDataID)
 			//// Link Collection to Manifest
 			err = mag.NeoLinkCollectionToManifest(ctx, colID, colTagID, msID)
 			if err != nil {
@@ -134,7 +135,7 @@ func pCollectonCmd(cmd *cobra.Command, args []string) {
 				continue
 			}
 			//// Link Manifest to Config
-			err = mag.NeoLinkManifestDataToConfig(ctx, maniID, mani.Config)
+			err = mag.NeoLinkManifestDataToConfig(ctx, maniDataID, mani.Config)
 			if err != nil {
 				l.Error(err)
 				continue
@@ -149,15 +150,15 @@ func pCollectonCmd(cmd *cobra.Command, args []string) {
 			///// Annotations
 			// -> Extract the extra Annotations from the Collection per Manifest
 			// -> Add them to the ManifestStandin (msID
+			as := types.NewAnnotations()
 			for k, v := range m.Annotations {
-				a := types.NewAnnotation(k, v)
-				err = mag.Database.Manifest_AddAnnotation(ctx, msID, &a)
-				if err != nil {
-					// Fail if Annotation is already defined and has a different value
-					l.Error(err)
-					return
-				}
+				as.AddNewAnnotation(k, v)
 			}
+			if err = mag.Database.ManifestDataAddAnnotations(ctx, maniDataID, &ms.Annotations); err != nil {
+				l.Error(err)
+				continue
+			}
+
 			/*****
 			We are going to stay clean while parsing the collections:
 			  1. Only add labels to the config object
@@ -171,7 +172,7 @@ func pCollectonCmd(cmd *cobra.Command, args []string) {
 					l.Error(err)
 					continue
 				}
-				mag.Database.Manifest_AddAnnotations(ctx, maniID, &mani.Annotations)
+				mag.Database.ManifestAddAnnotations(ctx, maniID, &mani.Annotations)
 			*/
 
 		}
