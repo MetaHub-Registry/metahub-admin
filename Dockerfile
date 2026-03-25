@@ -12,8 +12,10 @@ RUN apk update && apk add ca-certificates
 FROM golang:1.24.4 AS cbuilder
 WORKDIR /go/metahub-admin
 COPY . ./
-COPY --from=metalib /pkg exp/metalib/pkg
-COPY --from=metalib /go.sum /go.mod exp/metalib/
+COPY --from=metalib /pkg ext/metalib/pkg
+COPY --from=metalib /go.sum /go.mod ext/metalib/
+RUN go mod edit -replace github.com/metahub-registry/metahub-core=/go/metahub-admin/ext/metalib
+RUN find ext/metalib
 RUN --mount=type=cache,target=/go/pkg/mod go mod tidy
 ENV CGO_ENABLED=1 GOOS=linux
 RUN --mount=type=cache,target=/go/pkg/mod go build -a -ldflags '-extldflags "-static"' .
@@ -30,8 +32,8 @@ FROM golang:1.24-alpine3.22 AS go
 RUN apk add --no-cache git gcc musl-dev vim bash
 WORKDIR /go/metahub-admin
 COPY . ./
-COPY --from=metalib /pkg exp/metalib/pkg
-COPY --from=metalib /go.sum /go.mod exp/metalib/
+COPY --from=metalib /pkg ext/metalib/pkg
+COPY --from=metalib /go.sum /go.mod ext/metalib/
 RUN go mod edit -replace github.com/metahub-registry/metahub-core=/go/metahub-admin/ext/metalib
 RUN --mount=type=cache,target=/go/pkg/mod go mod tidy
 ENV CGO_ENABLED=1 GOOS=linux
