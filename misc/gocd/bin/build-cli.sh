@@ -41,7 +41,7 @@ else
    exit 1
 fi
 set -ex
-docker build . --build-arg=METALIB_IMAGE=METALIB_IMAGE -t test --target=cbuilder
+docker build . --build-arg=METALIB_IMAGE=${METALIB_IMAGE} -t test --target=cbuilder
 docker run -d --name target test sleep 30
 docker cp target:/go/metahub-admin/metahub-admin .
 docker rm -f target
