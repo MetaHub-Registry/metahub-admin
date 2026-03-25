@@ -46,6 +46,12 @@ docker run -d --name target test sleep 30
 docker cp target:/go/metahub-admin/metahub-admin .
 docker rm -f target
 
+mkdir -p ext/metalib
+cd ext/metalib
+docker run -d --name target ${METALIB_IMAGE} sleep 30
+docker export target  |tar xf - pkg go.mod go.sum
+cd ../..
+docker rm -f target
 go mod edit -replace github.com/metahub-registry/metahub-core=${PWD}/ext/metalib
 go mod tidy
 
