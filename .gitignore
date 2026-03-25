@@ -10,3 +10,4 @@ misc/config/aws.yaml
 .scannerwork
 misc/compose/sonarqube/**
 **/.DS_Store
+misc/config/hvk.yaml

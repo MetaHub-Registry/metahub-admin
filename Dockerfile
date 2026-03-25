@@ -1,4 +1,7 @@
 # syntax=docker/dockerfile:1.4
+ARG METALIB_IMAGE
+FROM $METALIB_IMAGE AS metalib
+
 FROM alpine:3.22 AS gonja
 RUN apk add --no-cache wget \
  && wget -qO- https://gitlab.com/qnib-golang/gonja-cli/-/releases/v0.0.2/downloads/gonja-cli_0.0.2_linux_amd64.tar.gz |tar xfz - -C /usr/local/bin
@@ -9,6 +12,8 @@ RUN apk update && apk add ca-certificates
 FROM golang:1.24.4 AS cbuilder
 WORKDIR /go/metahub-admin
 COPY . ./
+COPY --from=metalib /pkg exp/metalib/pkg
+COPY --from=metalib /go.sum /go.mod exp/metalib/
 RUN --mount=type=cache,target=/go/pkg/mod go mod tidy
 ENV CGO_ENABLED=1 GOOS=linux
 RUN --mount=type=cache,target=/go/pkg/mod go build -a -ldflags '-extldflags "-static"' .
@@ -25,7 +30,8 @@ FROM golang:1.24-alpine3.22 AS go
 RUN apk add --no-cache git gcc musl-dev vim bash
 WORKDIR /go/metahub-admin
 COPY . ./
-COPY --from=metalib . ./ext/metalib
+COPY --from=metalib /pkg exp/metalib/pkg
+COPY --from=metalib /go.sum /go.mod exp/metalib/
 RUN go mod edit -replace github.com/metahub-registry/metahub-core=/go/metahub-admin/ext/metalib
 RUN --mount=type=cache,target=/go/pkg/mod go mod tidy
 ENV CGO_ENABLED=1 GOOS=linux

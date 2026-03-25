@@ -25,20 +25,27 @@ if [[ -z ${GITLAB_REPO_RO} ]];then
     exit 1
 fi
 
-if [[ -f metalib.tar ]];then
-   echo "> Extracting metalib.tar"
-   mkdir -p ext
-   tar -xf metalib.tar -C ext
-elif [[ "${DEPLOYMENT}" == "dev" ]];then
-   echo "> git clone --branch=develop https://gitlab-ci-token:GITLAB_REPO_RO@github.com/metahub-registry/metahub-core ext/metalib"
-   git clone --branch=develop https://gitlab-ci-token:${GITLAB_REPO_RO}@github.com/metahub-registry/metahub-core ext/metalib
-elif [[ "${DEPLOYMENT}" == "prod" ]];then
-   echo "> git clone --branch=main https://gitlab-ci-token:GITLAB_REPO_RO@github.com/metahub-registry/metahub-core ext/metalib"
-   git clone --branch=main https://gitlab-ci-token:${GITLAB_REPO_RO}@github.com/metahub-registry/metahub-core ext/metalib
-else 
-   echo "ERROR: No DEPLOYMENT branch set"
+if [[ -f metalib_result/result.yaml ]];then
+   echo ">> found metalib_result.yml"
+   echo "####"
+   cat metalib_result/result.yaml
+   echo "####"
+   DOCKERFILE="Dockerfile.result"
+   METALIB_IMAGE=$(yq -r .image metalib_result/result.yaml)
+   cat >> result.yaml << EOF
+metalib:
+   image: ${METALIB_IMAGE}
+EOF
+else
+   echo "No metalib_result/result.yaml to get the metalib image"
    exit 1
 fi
+set -ex
+docker build . --build-arg=METALIB_IMAGE=METALIB_IMAGE -t test --target=cbuilder
+docker run -d --name target test sleep 30
+docker cp target:/go/metahub-admin/metahub-admin .
+docker rm -f target
+
 go mod edit -replace github.com/metahub-registry/metahub-core=${PWD}/ext/metalib
 go mod tidy
 
