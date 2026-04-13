@@ -1,8 +1,6 @@
 package cmd
 
 import (
-	"fmt"
-
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
@@ -47,32 +45,7 @@ func cManifestsCmd(cmd *cobra.Command, args []string) {
 	ctx, span := tracer.Start(ctx, "cManifestsCmd")
 	defer span.End()
 	if m, ok := mag.Config.Args["manifest"]; ok && m != "" {
-		utils.Info(l, span, "Compute manifest '%s'", m)
-		mani, _, e := mag.Database.ManifestGetByLabel(ctx, m)
-		if e != nil {
-			msg := "ManifestGetByLabel failed"
-			err = errors.Wrap(e, msg)
-			span.SetStatus(codes.Error, err.Error())
-			span.AddEvent("log", trace.WithAttributes(
-				attribute.String("log.severity", "error"),
-				attribute.String("log.message", msg),
-			))
-			span.RecordError(err)
-			l.Fatal(msg)
-		}
-		e = mag.ComputeManifest(ctx, mani)
-		if e != nil {
-			msg := fmt.Sprintf("ComputeManifest '%s' failed", mani.Upstream.String())
-			err = errors.Wrap(e, msg)
-			span.SetStatus(codes.Error, err.Error())
-			span.AddEvent("log", trace.WithAttributes(
-				attribute.String("log.severity", "error"),
-				attribute.String("log.message", msg),
-			))
-			span.RecordError(err)
-			l.Fatal(msg)
-		}
-		return
+		utils.Info(l, span, "Single-manifest compute (--manifest=%s) is deprecated; using ComputeAllManifests instead", m)
 	}
 	e := mag.ComputeAllManifests(ctx)
 	if e != nil {
