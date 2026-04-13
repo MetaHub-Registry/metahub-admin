@@ -69,7 +69,7 @@ func pCollectonCmd(cmd *cobra.Command, args []string) {
 		}
 		l.Infof("Collection: %d / Tag: %d", colID, colTagID)
 		for _, m := range col.Manifests {
-			l.Infof("  Maninfest > [%s] %s", utils.ShortenDigest(m.Digest), m.Image)
+			l.Infof("  Manifest > [%s] %s", utils.ShortenDigest(m.Digest), m.Image)
 			// Fetch real Manifest from cache
 			mani, err := mag.GetManifest(ctx, m)
 			if err != nil {
@@ -77,15 +77,10 @@ func pCollectonCmd(cmd *cobra.Command, args []string) {
 				l.Error(err)
 				continue
 			}
-			// Make sure the (standin) Manifest is present
-			ms := types.ManifestFromManifestData(mani)
-			msID, err := mag.Database.ManifestGetInsert(ctx, ms.Upstream, ms.Annotations.ToSlice()...)
-			if err != nil {
-				l.Error(err)
-				continue
-			}
 
-			/// 1. Insert Config
+			// Insert Config and Layers BEFORE ManifestGetInsert —
+			// the new ManifestGetInsert validates that all referenced
+			// blobs (config + layers) exist in the graph.
 			cfgID, err := mag.InsertConfig(ctx, mani.Config, mani.Upstream)
 			if err != nil {
 				l.Error(err)
@@ -93,7 +88,6 @@ func pCollectonCmd(cmd *cobra.Command, args []string) {
 			}
 			mani.Config.ID = cfgID
 			l.Warnf("  configID: %d", cfgID)
-			// 4. Insert Layers
 			for _, layer := range mani.Layers {
 				lID, err := mag.NeoInsertLayer(ctx, layer)
 				if err != nil {
@@ -101,41 +95,39 @@ func pCollectonCmd(cmd *cobra.Command, args []string) {
 					continue
 				}
 				l.Warnf("  LayerID: %d", lID)
-				//// Link Manifest to Layer
-				//err = mag.NeoLinkManifestToLayer(ctx, maniID, lID, idx)
-				//if err != nil {
-				//	l.Error(err)
-				//	continue
-				//}
 			}
-			//// 1. Manifest
-			// 1. Insert Manifest
-			maniDataID, err := mag.NeoInsertManifestData(ctx, msID, mani, "parsed")
+
+			// Make sure the Manifest node is present (get-or-create)
+			if err = mag.Database.ManifestGetInsert(ctx, &mani); err != nil {
+				l.Error(err)
+				continue
+			}
+			//// Insert Manifest content node
+			maniDataID, err := mag.NeoInsertManifest(ctx, mani.ID, mani, "parsed")
 			mani.ID = maniDataID
 			if err != nil {
 				l.Error(err)
 				continue
 			}
-			// 1. Insert Platform
+			// Insert Platform
 			platID, err := mag.NeoInsertPlatform(ctx, mani.Platform)
 			if err != nil {
 				l.Error(err)
 				continue
 			}
-			err = mag.Database.LinkManifestDataToPlatform(ctx, maniDataID, platID)
+			err = mag.Database.LinkManifestToPlatform(ctx, maniDataID, platID)
 			if err != nil {
 				l.Error(err)
 				continue
 			}
-			//l.Warnf("  ManifestID: %d", maniDataID)
 			//// Link Collection to Manifest
-			err = mag.NeoLinkCollectionToManifest(ctx, colID, colTagID, msID)
+			err = mag.NeoLinkCollectionToManifest(ctx, colID, colTagID, mani.ID)
 			if err != nil {
 				l.Error(err)
 				continue
 			}
 			//// Link Manifest to Config
-			err = mag.NeoLinkManifestDataToConfig(ctx, maniDataID, mani.Config)
+			err = mag.NeoLinkManifestToConfig(ctx, maniDataID, mani.Config)
 			if err != nil {
 				l.Error(err)
 				continue
@@ -148,13 +140,11 @@ func pCollectonCmd(cmd *cobra.Command, args []string) {
 			}
 
 			///// Annotations
-			// -> Extract the extra Annotations from the Collection per Manifest
-			// -> Add them to the ManifestStandin (msID
 			as := types.NewAnnotations()
 			for k, v := range m.Annotations {
 				as.AddNewAnnotation(k, v)
 			}
-			if err = mag.Database.ManifestDataAddAnnotations(ctx, maniDataID, &ms.Annotations); err != nil {
+			if err = mag.Database.ManifestAddAnnotations(ctx, maniDataID, &as); err != nil {
 				l.Error(err)
 				continue
 			}
