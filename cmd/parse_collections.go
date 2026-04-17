@@ -14,6 +14,10 @@ import (
 	yamlCfg "github.com/metahub-registry/metahub-core/pkg/yaml/config"
 )
 
+// genericProfileLabel is the default profile that parsed manifests are
+// attributed to. Mirrors metahub-api's defaultProfile constant.
+const genericProfileLabel = "generic"
+
 var parseCollectionCmd = &cobra.Command{
 	Use:   "collections",
 	Short: "Go through collections and push them into the Graph; caching must be done before",
@@ -59,6 +63,21 @@ func pCollectonCmd(cmd *cobra.Command, args []string) {
 		l.Error(err)
 	}
 	_ = mag
+
+	// Resolve the generic profile once. If it is not seeded, Slot wiring
+	// will be skipped per-manifest and parse falls back to writing only
+	// the legacy wrapper edges (see fix-parse-collections-slot-wiring D4).
+	// This keeps parse usable on fresh DBs where `parse profiles` has not
+	// yet been run.
+	genericPrf, genericPrfFound, prfErr := mag.Database.ProfileGetByLabel(ctx, genericProfileLabel)
+	if prfErr != nil {
+		l.Warnf("failed to resolve '%s' profile: %v; Slot wiring will be skipped", genericProfileLabel, prfErr)
+		genericPrfFound = false
+	}
+	if !genericPrfFound {
+		l.Warnf("profile '%s' not seeded; Slot wiring will be skipped. Run `metahub-admin parse profiles` first for pullable output", genericProfileLabel)
+	}
+
 	for _, col := range cols {
 		l.Infof("# Col: %s:%s", col.Name, col.Tag)
 		// Create Collection
@@ -149,6 +168,34 @@ func pCollectonCmd(cmd *cobra.Command, args []string) {
 				continue
 			}
 
+			//// Slot wiring (fix-parse-collections-slot-wiring / task 2.2)
+			// Mirror metahub-api's push-path wireSlotOnPush + profile-link
+			// + rule-unwind sequence. These edges are what the current
+			// Slot-centric ManifestExists lookup path walks, so without
+			// them parsed content is unpullable via OCI GET/HEAD.
+			//
+			// Delegates entirely to existing metalib helpers — no new
+			// primitives introduced, so any future changes in the push
+			// path (e.g. manipulated-Manifest wiring) propagate to parse
+			// automatically.
+			if genericPrfFound {
+				slot, slotErr := mag.Database.SlotGetCreate(ctx, col.Name, col.Tag, genericProfileLabel)
+				if slotErr != nil {
+					l.Errorf("SlotGetCreate(%s:%s#%s) failed: %v", col.Name, col.Tag, genericProfileLabel, slotErr)
+				} else {
+					if pushErr := mag.Database.SlotAppendPushedManifest(ctx, slot.ID, maniDataID); pushErr != nil {
+						l.Errorf("SlotAppendPushedManifest(slot=%d, manifest=%d) failed: %v", slot.ID, maniDataID, pushErr)
+					}
+					if linkErr := mag.Database.LinkManifestToProfile(ctx, maniDataID, genericPrf.ID, "PULLED_BY"); linkErr != nil {
+						l.Errorf("LinkManifestToProfile(manifest=%d, profile=%d, PULLED_BY) failed: %v", maniDataID, genericPrf.ID, linkErr)
+					}
+					if unwErr := mag.Database.ProfileUnwindRules(ctx, genericPrf.ID, maniDataID); unwErr != nil {
+						l.Errorf("ProfileUnwindRules(profile=%d, manifest=%d) failed: %v", genericPrf.ID, maniDataID, unwErr)
+					}
+					l.Infof("wired Slot %d for %s:%s (manifest=%d, profile=%s)", slot.ID, col.Name, col.Tag, maniDataID, genericProfileLabel)
+				}
+			}
+
 			/*****
 			We are going to stay clean while parsing the collections:
 			  1. Only add labels to the config object
@@ -165,6 +212,22 @@ func pCollectonCmd(cmd *cobra.Command, args []string) {
 				mag.Database.ManifestAddAnnotations(ctx, maniID, &mani.Annotations)
 			*/
 
+		}
+
+		//// Per-collection index compute (fix-parse-collections-slot-wiring / task 2.3)
+		// Mirrors the push-path computeAfterManifestPush call. Rebuilds
+		// the per-profile :Index from the Slot's HAS_PUSHED manifests,
+		// so `GET /v2/<col.Name>/manifests/<col.Tag>` serves the computed
+		// index right after parse completes (no separate `metahub-admin
+		// compute manifestlists` step required).
+		//
+		// Non-fatal by design (D4): if rules are not seeded yet the
+		// compute may legitimately produce no index, and the user can
+		// rerun compute later without re-parsing.
+		if genericPrfFound {
+			if cmpErr := mag.ComputeManifestlistsForRepoTag(ctx, col.Name, col.Tag, &genericPrf); cmpErr != nil {
+				l.Warnf("ComputeManifestlistsForRepoTag(%s:%s, profile=%s) failed (non-fatal): %v", col.Name, col.Tag, genericProfileLabel, cmpErr)
+			}
 		}
 	}
 
