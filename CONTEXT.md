@@ -99,3 +99,13 @@ and tracked as a follow-up session. When that lands, parse becomes a
 thin adapter that constructs `Target` + `Source` and calls
 `MaterializeManifest` — and the Slot/Profile wiring added in this
 session moves into the unified materialisation function.
+
+## 2026-04-17 Continuation
+
+### What changed
+- **compose-config.yaml updated**: Changed from legacy `configs`+`layers` MinIO buckets to unified `blobs` bucket. Changed from flat string registries (`- "registry:5050"`) to structured `name`/`url` format (`name: local-reg, url: registry:5050`). Aligned with current metalib schema expectations.
+- **Admin service removed from compose**: Admin commands now run inside the `dev` container via `go run main.go` from the metahub-admin source mount. This uses the current metalib source, eliminating schema mismatches between admin v1.4.3 and current metalib.
+
+### Gotchas
+- The old admin Docker image (v1.4.3) creates `:ManifestData`/`:Layer`/`:Config` labels incompatible with current metalib. Running from source avoids this.
+- `compose-config.yaml` must have the `blobs` bucket (not `configs`+`layers`) for the current metalib MinIO code to work.
