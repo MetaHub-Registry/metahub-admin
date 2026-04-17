@@ -7,12 +7,14 @@ minio:
   ssl: false
   manifests:
     bucket: manifests
-  configs:
-    bucket: configs
-  layers:
-    bucket: layers
+  blobs:
+    bucket: blobs
+    redirect: false
 registries:
-  - "registry:5050"
+  - name: local-reg
+    url: registry:5050
+    allow_anon: true
+    tls: false
 neo4j:
   dbname: neo4j
   user: neo4j
