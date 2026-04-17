@@ -14,5 +14,5 @@ minio:
 neo4j:
   dbname: neo4j
   user: neo4j
-  password: test
+  password: neo4j123
   url: bolt://localhost:7687

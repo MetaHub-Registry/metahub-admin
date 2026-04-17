@@ -11,3 +11,4 @@ misc/config/aws.yaml
 misc/compose/sonarqube/**
 **/.DS_Store
 misc/config/hvk.yaml
+test.log
