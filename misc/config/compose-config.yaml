@@ -16,7 +16,7 @@ registries:
 neo4j:
   dbname: neo4j
   user: neo4j
-  password: test
+  password: neo4j123
   url: bolt://neo4j:7687
 logging:
   gelf: logstash:12201
