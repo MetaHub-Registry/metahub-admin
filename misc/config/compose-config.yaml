@@ -1,22 +1,20 @@
 minio:
   url: minio:9000
   region: us-east-1
-  user: minio 
+  user: minio
   password: miniominio
   redirect: false
   ssl: false
   manifests:
     bucket: manifests
-  configs:
-    bucket: configs
-  layers:
-    bucket: layers
+  blobs:
+    bucket: blobs
 registries:
   - "registry:5050"
 neo4j:
   dbname: neo4j
   user: neo4j
-  password: test
+  password: neo4j123
   url: bolt://neo4j:7687
 logging:
   gelf: logstash:12201
