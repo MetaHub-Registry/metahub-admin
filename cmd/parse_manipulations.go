@@ -56,14 +56,37 @@ func pManipulationsCmd(cmd *cobra.Command, args []string) {
 	}
 
 	for _, cfgMp := range res {
-		/// Fetch Upstream first
+		/// Fetch Upstream first — cover both the legacy flat layers
+		/// form and the new defaults + variants schema.
 		for _, mpl := range cfgMp.ManipuLayers {
+			if mpl.Image == "" {
+				continue
+			}
 			up, err := types.NewUpstreamByName(mpl.Image)
 			if err != nil {
 				logrus.Fatal(err)
 			}
 			if err = mag.CacheUpstream(ctx, up); err != nil {
 				logrus.Fatal(err)
+			}
+		}
+		// New schema: default layers and variant layers.
+		allCfgs := []yamlCfg.ManipuConfig{cfgMp.DefaultConfig()}
+		for _, v := range cfgMp.Variants {
+			allCfgs = append(allCfgs, v)
+		}
+		for _, c := range allCfgs {
+			for _, mpl := range c.Layers {
+				if mpl.Image == "" {
+					continue
+				}
+				up, err := types.NewUpstreamByName(mpl.Image)
+				if err != nil {
+					logrus.Fatal(err)
+				}
+				if err = mag.CacheUpstream(ctx, up); err != nil {
+					logrus.Fatal(err)
+				}
 			}
 		}
 		mp, e := mag.Database.ManipulationFromYAML(ctx, cfgMp)

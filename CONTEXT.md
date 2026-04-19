@@ -53,19 +53,51 @@ go test ./... 2>&1 > test.log  # otherwise
 
 ## Recent Changes
 
-- **Slot wiring in `parse collections`** (`fix-parse-collections-slot-wiring`)
-  — after each parsed manifest is linked to its platform, parse now
-  writes the Slot-centric edges that the OCI pull path requires:
-  `:Slot{repo,tag,generic}` + `HAS_PUSHED` + `PULLED_BY` +
-  `ProfileUnwindRules`. After the per-collection loop finishes,
-  `ComputeManifestlistsForRepoTag` runs to build the per-profile
-  `:Index`. Legacy `Repo/Tag-[:UPSTREAM]->Manifest` edges are preserved
-  for backward compatibility.
 - 7 function renames (`ManifestData*` → `Manifest*` suffix drop)
 - Insertion ordering fix (config/layers before ManifestGetInsert)
 - Collection link label fix (accept both ManifestWrapper and Manifest)
 - Version parsing updated to handle `-devN` suffix
 - SonarQube version auto-detection
+
+## 2026-04-18 (ui-and-manipulation session)
+
+### Session merge
+
+The session branch (`48-ui-and-manipulation`) was cut from `f0e54c1`
+(2026-04-13) which predates the merge of `47-pullthrough-repo`
+(`5a8cd09`, 2026-04-17). That merge carried `0b662e6`
+(`feat(parse-collections): wire Slot, PULLED_BY, unwind, and compute`)
+— the exact fix the e2e-dev verify-ce regression guard expects
+(Slot + HAS_PUSHED + POINTS_TO->Index + HEAD /v2/.../manifests/<tag>=200).
+
+Merge resolved with these deltas:
+- `.bumpversion.cfg` + `cmd/version.go`: bumped to `2.1.0-dev1`
+  (session dev bit on top of main's 2.1.0).
+- `go.mod`: kept relative `../metahub-core` replace so both host and
+  compose-container paths resolve.
+- `misc/config/compose-config.yaml`: kept session's `blobs:` scheme +
+  added main's `redirect: false`.
+
+### Extended manipulation fix (this session)
+
+`cmd/parse_manipulations.go` now caches upstreams from BOTH legacy
+flat `ManipuLayers` AND the new `DefaultConfig + Variants` layer lists
+so variant images resolve before `ManipulationFromYAML` runs under the
+extended schema. Without this, parsing a migrated CE manipulation
+(glow/1.5.0) failed on uncached variant images.
+
+### Verified end-to-end
+
+Against the local compose stack post-merge:
+
+```
+parse manifests     → 2 Manifest nodes for qnib/ftest
+parse collections   → wires Slot + HAS_PUSHED + PULLED_BY + POINTS_TO->Index
+HEAD /v2/qnib/ftest/manifests/latest → 200
+(mp:Manipulation)-[:HAS]->(mpl:ManipuLayer) → 2 (legacy compat edge)
+```
+
+All three verify-ce failures covered by this session + the merge.
 
 ## Gotchas
 

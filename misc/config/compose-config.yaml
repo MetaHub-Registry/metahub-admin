@@ -1,7 +1,7 @@
 minio:
   url: minio:9000
   region: us-east-1
-  user: minio 
+  user: minio
   password: miniominio
   redirect: false
   ssl: false
