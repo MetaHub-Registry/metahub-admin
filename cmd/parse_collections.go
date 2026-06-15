@@ -196,6 +196,20 @@ func pCollectonCmd(cmd *cobra.Command, args []string) {
 				}
 			}
 
+			//// Explicit collection profile (collection-profile-authority)
+			// When the collection entry names a profile, bind this
+			// manifest to it authoritatively so it is servable under that
+			// profile (e.g. the zen2 image under `cpu#zen2`). An unknown
+			// profile label is a hard error — a mis-authored collection
+			// must surface loudly. Empty profile = no-op, falls back to
+			// the generic/image-annotation path above.
+			if m.Profile != "" {
+				if bindErr := mag.BindManifestToProfile(ctx, col.Name, col.Tag, m.Profile, maniDataID); bindErr != nil {
+					l.Errorf("BindManifestToProfile(%s:%s#%s, manifest=%d) failed: %v", col.Name, col.Tag, m.Profile, maniDataID, bindErr)
+					continue
+				}
+			}
+
 			/*****
 			We are going to stay clean while parsing the collections:
 			  1. Only add labels to the config object
@@ -224,6 +238,21 @@ func pCollectonCmd(cmd *cobra.Command, args []string) {
 		// Non-fatal by design (D4): if rules are not seeded yet the
 		// compute may legitimately produce no index, and the user can
 		// rerun compute later without re-parsing.
+		// Per-collection index compute. A single compute with the generic
+		// pusher rebuilds the :Index for EVERY profile (generic + every
+		// declared cpu#zenX) via rebuildIndexesPerProfile→ProfileGetAll,
+		// using the scoped annotations BindManifestToProfile already
+		// injected per declared manifest.
+		//
+		// IMPORTANT: do NOT call ComputeManifestlistsForRepoTag once per
+		// declared profile. Its injectPusherAnnotations step broadcasts
+		// the pusher profile's annotations onto EVERY manifest in the tag
+		// (correct for `generic`, where all manifests are members). Calling
+		// it for cpu#zen2 then cpu#zen3 cross-contaminates: every manifest
+		// ends up with both microarch annotations, so every image matches
+		// both zen profiles. The declared-profile binding is already done,
+		// scoped, by BindManifestToProfile above; the indexes fall out of
+		// this single generic compute.
 		if genericPrfFound {
 			if cmpErr := mag.ComputeManifestlistsForRepoTag(ctx, col.Name, col.Tag, &genericPrf); cmpErr != nil {
 				l.Warnf("ComputeManifestlistsForRepoTag(%s:%s, profile=%s) failed (non-fatal): %v", col.Name, col.Tag, genericProfileLabel, cmpErr)
