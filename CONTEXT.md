@@ -1,6 +1,20 @@
 # Context: metahub-admin
 
 > This file helps AI agents understand the repo quickly.
+
+## model-centric-pull (session isc-session-v2, 2026-07-07) — branch `53-isc-session-v2`
+
+`parse models` v1 — ingest declarative CE `models/` entries. Commit `3fe68e0`.
+
+**Key files:**
+- `cmd/repackage.go` — extracted `repackageOnce(ctx, mag)` (the repackage core, driven by the `rp*` package vars); CLI `repackageRun` now just creates the magazine and calls it. `--runtime` already existed (recorded as a config-artefact annotation via `ConfigCompositionAnnotations`).
+- `cmd/parse_models.go` — `parse models <dir>`: `FindModels` → for each model × quant × **model-serving profile** (`modelServingProfiles` filters on `Hardware.IsModelServing()`) sets the `rp*` vars and calls `repackageOnce`. Pure helpers `modelArtifactRepo`/`modelServingProfiles` unit-tested (`cmd/parse_models_test.go`).
+
+**Contract / gotchas:**
+- Sources must be **pre-cached** in metahub (like `parse collections`): quant source cache = `models/<name>/<quant>`, artifactType `application/vnd.qnib.model.artifact`. External `quants[].source` auto-cache is a follow-up.
+- `repackageOnce` still `logrus.Fatal`s on error → one bad `(quant, profile)` aborts the run; harden to returned errors (tracked).
+- `runtime register` (`cmd/runtime.go`) not yet removed — removing it breaks `misc/gocd/bin/test-repackage.sh`; do it with #8 + an e2e update.
+- **Knowledge graph is STALE** (`cmd/` changed) — regenerate with `/understand` before relying on `.understand-anything/`.
 > Updated after each session that modifies this repo.
 
 ## What This Repo Is
