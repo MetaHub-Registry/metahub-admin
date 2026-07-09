@@ -41,6 +41,15 @@ RUN --mount=type=cache,target=/go/pkg/mod go build -a -ldflags '-extldflags "-st
 
 FROM alpine:3.22
 RUN apk add ca-certificates bash git curl jq
+# oras CLI: the product image doubles as the model-seed/repackage image (the
+# gpu-workload-test Seed Job runs `oras cp` + `metahub-admin repackage` from it),
+# so the pipeline-built admin image always carries a matching oras + admin binary.
+ARG ORAS_VERSION=1.2.0
+RUN curl -fsSL -o /tmp/oras.tgz \
+      "https://github.com/oras-project/oras/releases/download/v${ORAS_VERSION}/oras_${ORAS_VERSION}_linux_amd64.tar.gz" \
+ && tar xzf /tmp/oras.tgz -C /usr/local/bin oras \
+ && rm -f /tmp/oras.tgz \
+ && oras version
 COPY --from=go /go/metahub-admin/metahub-admin /usr/bin/metahub-admin
 COPY --from=gonja /usr/local/bin/gonja-cli /usr/local/bin/gonja-cli
 COPY ./misc/bin/run.sh /usr/bin/run.sh
