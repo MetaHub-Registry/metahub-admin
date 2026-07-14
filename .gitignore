@@ -12,3 +12,4 @@ misc/compose/sonarqube/**
 **/.DS_Store
 misc/config/hvk.yaml
 test.log
+.understand-anything/.trash-*
