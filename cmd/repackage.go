@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"time"
 
 	"github.com/opencontainers/go-digest"
 	"github.com/regclient/regclient"
@@ -149,6 +150,40 @@ func repackageOnce(ctx context.Context, mag magazine.Magazine) {
 	} else {
 		logrus.Infof("no config blob (%s) and no --runtime — model-only push", types.ModelConfigMediaType)
 	}
+
+	// 9. Warm the manipulation cache for THIS serving profile so the first pull is
+	//    a cache hit instead of the on-request createManipulatedManifest recompute.
+	warmManipulationCache(ctx, mag, prf)
+}
+
+// warmManipulationCache precomputes + persists the model manipulation for prf so
+// a subsequent model-centric pull is a cache hit rather than paying the ~1.7s
+// createManipulatedManifest recompute on the request path (against eu-west-1 S3).
+// The model-centric pull resolves models/<name> to the runtime collection at tag
+// "latest" and manipulates it under the pulling profile; this runs that exact
+// manipulation now (populating reuseExistingManipulated). Done via
+// ApplyManipulationsToManifests directly — not ComputeManifestlistsForRepoTag —
+// to avoid broadcasting the profile's annotations onto the tag. Non-fatal: on any
+// miss the pull falls back to the lazy compute as before.
+func warmManipulationCache(ctx context.Context, mag magazine.Magazine, prf types.Profile) {
+	if rpRuntime == "" {
+		return
+	}
+	warmReq := types.Request{Repo: rpRuntime, Tag: "latest", Profile: prf.Label}
+	ml, found, err := mag.IndexGetByRequest(ctx, warmReq)
+	if err != nil {
+		logrus.Warnf("precompute: IndexGetByRequest(%s:latest, %s) failed (non-fatal): %v", rpRuntime, prf.Label, err)
+		return
+	}
+	if !found || len(ml.Manifests) == 0 {
+		logrus.Infof("precompute: no runtime index for %s:latest (profile %s) yet — pull will compute lazily", rpRuntime, prf.Label)
+		return
+	}
+	if _, mErr := mag.ApplyManipulationsToManifests(ctx, prf, ml.Manifests); mErr != nil {
+		logrus.Warnf("precompute: ApplyManipulationsToManifests(%s, %s:latest) failed (non-fatal): %v", prf.Label, rpRuntime, mErr)
+		return
+	}
+	logrus.Infof("precomputed manipulation for profile %s on %s:latest (%d manifests) — first pull is a cache hit", prf.Label, rpRuntime, len(ml.Manifests))
 }
 
 // repackageConfig builds a `models/<name>-config:<quant>` image from the config
@@ -305,21 +340,48 @@ func pushModelLayer(ctx context.Context, mag magazine.Magazine, rc *regclient.Re
 }
 
 // pushLayerPlans pushes each planned model file as a deterministic uncompressed
-// tar layer (two-pass: hash then stream), returning the layer descriptors.
+// tar layer, returning the layer descriptors. The tar is content-addressed and
+// deterministic, so a layer already present in the target repo (from a prior
+// seed/admin build, or an earlier profile in the same seed) is HEAD-detected and
+// its slow (~2-4 MB/s S3-egress) upload skipped. The hash pass still runs — it's
+// a fast S3 read — to obtain the digest to check against.
 func pushLayerPlans(ctx context.Context, mag magazine.Magazine, rc *regclient.RegClient, imgRef ref.Ref, plans []types.ModelFilePlan) ([]types.ModelLayerDescriptor, error) {
 	layers := make([]types.ModelLayerDescriptor, 0, len(plans))
 	for _, p := range plans {
+		// INSTRUMENTATION (perf-debug): time the two S3-bound passes separately —
+		// hashModelLayer reads the source blob (S3 ingress) to derive the tar digest;
+		// pushModelLayer streams the tar back (S3 egress). Logging both, plus the HEAD
+		// dedup result, shows exactly where each profile's ~1GB of wall-time goes.
+		hStart := time.Now()
 		dig, tarSize, err := hashModelLayer(ctx, mag, p)
 		if err != nil {
 			return nil, fmt.Errorf("hash layer %s: %w", p.File, err)
 		}
+		logrus.Infof("repackage-instr: hashed %s → %s (%d bytes) read+hash=%s", p.File, dig, tarSize, time.Since(hStart))
+		present := blobPresent(ctx, rc, imgRef, dig, tarSize)
+		logrus.Infof("repackage-instr: HEAD dedup blobPresent(repo=%s digest=%s)=%v", imgRef.Repository, dig, present)
+		if present {
+			layers = append(layers, types.ModelLayerDescriptor{Digest: dig, Size: tarSize})
+			logrus.Infof("layer %s → %s already present (%d bytes) — skipping upload", p.File, dig, tarSize)
+			continue
+		}
+		pStart := time.Now()
 		if err := pushModelLayer(ctx, mag, rc, imgRef, p, dig, tarSize); err != nil {
 			return nil, fmt.Errorf("push layer %s: %w", p.File, err)
 		}
 		layers = append(layers, types.ModelLayerDescriptor{Digest: dig, Size: tarSize})
-		logrus.Infof("pushed layer %s → %s (%d bytes)", p.File, dig, tarSize)
+		logrus.Infof("pushed layer %s → %s (%d bytes) upload=%s", p.File, dig, tarSize, time.Since(pStart))
 	}
 	return layers, nil
+}
+
+// blobPresent reports whether a blob with digest dig already exists in imgRef's
+// repo, so the slow S3-egress layer upload can be skipped. BlobHead returns a
+// non-nil error on a HEAD miss (or any transport error); either way we treat it
+// as "not present" and fall back to a full push, which is always safe.
+func blobPresent(ctx context.Context, rc *regclient.RegClient, imgRef ref.Ref, dig digest.Digest, size int64) bool {
+	_, err := rc.BlobHead(ctx, imgRef, rcTypes.Descriptor{Digest: dig, Size: size})
+	return err == nil
 }
 
 // pushAssembledImage pushes the assembled OCI config blob then the manifest.
