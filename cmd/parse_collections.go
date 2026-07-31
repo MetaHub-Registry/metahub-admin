@@ -183,7 +183,9 @@ func pCollectonCmd(cmd *cobra.Command, args []string) {
 				if slotErr != nil {
 					l.Errorf("SlotGetCreate(%s:%s#%s) failed: %v", col.Name, col.Tag, genericProfileLabel, slotErr)
 				} else {
-					if pushErr := mag.Database.SlotAppendPushedManifest(ctx, slot.ID, maniDataID); pushErr != nil {
+					// System/parse binding (not a user push) → empty user; its bytes
+					// fall into the per-user "unknown" bucket (metalib UnknownUsageBucket).
+					if pushErr := mag.Database.SlotAppendPushedManifest(ctx, slot.ID, maniDataID, ""); pushErr != nil {
 						l.Errorf("SlotAppendPushedManifest(slot=%d, manifest=%d) failed: %v", slot.ID, maniDataID, pushErr)
 					}
 					if linkErr := mag.Database.LinkManifestToProfile(ctx, maniDataID, genericPrf.ID, "PULLED_BY"); linkErr != nil {
