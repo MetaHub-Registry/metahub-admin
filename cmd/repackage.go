@@ -179,6 +179,12 @@ func warmManipulationCache(ctx context.Context, mag magazine.Magazine, prf types
 		logrus.Infof("precompute: no runtime index for %s:latest (profile %s) yet — pull will compute lazily", rpRuntime, prf.Label)
 		return
 	}
+	// Thread the model-centric context so the (gated) model-serving stack fires
+	// during cache precomputation. Without this, applyManipulationsToCandidate
+	// would fall through to the static path and skip model/config injection —
+	// defeating the cache warm.
+	ctx = types.WithRequestedModel(ctx, rpName)
+	ctx = types.WithRequestedQuant(ctx, rpQuantTag)
 	if _, mErr := mag.ApplyManipulationsToManifests(ctx, prf, ml.Manifests); mErr != nil {
 		logrus.Warnf("precompute: ApplyManipulationsToManifests(%s, %s:latest) failed (non-fatal): %v", prf.Label, rpRuntime, mErr)
 		return

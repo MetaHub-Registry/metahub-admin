@@ -114,6 +114,7 @@ echo "== 2. metahub-admin repackage -> two-layer model-layer image =="
   --artifact-repo "${ARTIFACT_REPO}" \
   --artifact-type "${ARTIFACT_TYPE}" \
   --name "${NAME}" --quant-tag "${QUANT}" --profile "${MH_PROFILE}" \
+  --runtime "apps/${NAME}-runtime" \
   --registry-url "${MH_URL}" \
   --registry-user "${MH_USER}" --registry-pass "${MH_PASS}" \
   --registry-tls=false
@@ -160,25 +161,44 @@ echo "${model}" | jq -e --arg q "${QUANT}" '.model.quantizations | map(.tag) | i
   || { echo "FAIL: GET /api/v1/models/${NAME} missing quant ${QUANT}"; exit 1; }
 echo "   OK: runtime registered + model resolvable under aggregated profile ${MH_PROFILE}"
 
-echo "== 5. deploy path: model injected into a runtime image pulled under the profile =="
-# The payoff of repackage: a plain runtime image pulled under the model's
-# aggregated profile comes back with the model-layer injected at /model/<name>/.
-# This exercises the pull-time resolution + manipulation engine end-to-end and
-# guards the two injection fixes (quant-rule platform gate; manipulated-manifest
-# platform hydration) — no GPU or real inference runtime needed, a stand-in base
-# image suffices to prove the bytes are injected and the tag pull is resolvable.
-RUNTIME_IMG="${MH_URL}/apps/${NAME}-runtime:1"
+echo "== 5. deploy path: model injected via model-centric pull =="
+# Post-gate (gate-model-serving-on-model-centric): collection pulls under a
+# model-serving profile are NOT injected (the gate routes them to the static
+# path, skipping model/ and config/ manipulations). Injection happens ONLY on
+# model-centric pulls (models/<name>:<quant>), which resolve to the runtime via
+# the --runtime composition annotation and set RequestedModel in context so the
+# model-serving stack fires.
+#
+# The test pushes a stand-in runtime at apps/<name>-runtime:latest (the tag
+# resolveModelCentricRuntime hardcodes), then pulls models/<name>:<quant> under
+# the profile — the composite (runtime + weights + config) comes back with the
+# model files at /model/<name>/.
+RUNTIME_IMG="${MH_URL}/apps/${NAME}-runtime:latest"
 docker pull -q alpine:3.19 >/dev/null
 docker tag alpine:3.19 "${RUNTIME_IMG}"
-# The pull/push identity encodes the intent: user 'oci', profile ${MH_PROFILE}
-# (the '#' in the aggregated profile is fine in a docker-login username).
 docker login "${MH_URL}" -u "${MH_USER}/${MH_PROFILE}" -p "${MH_PASS}" >/dev/null 2>&1
-docker push "${RUNTIME_IMG}" >/dev/null       # push under the profile → compute-time injection
+docker push "${RUNTIME_IMG}" >/dev/null
 docker rmi "${RUNTIME_IMG}" alpine:3.19 >/dev/null 2>&1 || true
-docker pull -q "${RUNTIME_IMG}" >/dev/null    # pull under the profile → the injected image
-injected="$(docker run --rm --entrypoint sh "${RUNTIME_IMG}" -c "ls /model/${NAME}/ 2>/dev/null | wc -l" | tr -d '[:space:]')"
-[ "${injected:-0}" -ge 1 ] || {
-  echo "FAIL: no model files injected at /model/${NAME}/ when pulling a runtime under ${MH_PROFILE}"; exit 1; }
-echo "   OK: ${injected} model file(s) injected at /model/${NAME}/ via pull under ${MH_PROFILE}"
 
-echo "PASS: repackaged + runtime/model API OK + model injected into a runtime pulled under ${MH_PROFILE}"
+# 5a. Collection pull must NOT inject (gate regression guard)
+docker pull -q "${RUNTIME_IMG}" >/dev/null
+col_injected="$(docker run --rm --entrypoint sh "${RUNTIME_IMG}" -c "ls /model/${NAME}/ 2>/dev/null | wc -l" | tr -d '[:space:]')"
+if [ "${col_injected:-0}" -eq 0 ]; then
+  echo "   OK: collection pull NOT injected under ${MH_PROFILE} (gate holds)"
+else
+  echo "FAIL: collection pull leaked model injection under ${MH_PROFILE} (gate broken)"; exit 1
+fi
+docker rmi "${RUNTIME_IMG}" >/dev/null 2>&1 || true
+
+# 5b. Model-centric pull injects (runtime + weights + config)
+MODEL_IMG="${MH_URL}/models/${NAME}:${QUANT}"
+docker pull -q "${MODEL_IMG}" >/dev/null
+injected="$(docker run --rm --entrypoint sh "${MODEL_IMG}" -c "ls /model/${NAME}/ 2>/dev/null | wc -l" | tr -d '[:space:]')"
+if [ "${injected:-0}" -ge 1 ]; then
+  echo "   OK: ${injected} model file(s) injected at /model/${NAME}/ via model-centric pull under ${MH_PROFILE}"
+else
+  echo "FAIL: no model files injected at /model/${NAME}/ on model-centric pull models/${NAME}:${QUANT}"; exit 1
+fi
+docker rmi "${MODEL_IMG}" >/dev/null 2>&1 || true
+
+echo "PASS: repackaged + runtime/model API OK + model injected via model-centric pull under ${MH_PROFILE}"

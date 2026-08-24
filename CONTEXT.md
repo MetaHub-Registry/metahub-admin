@@ -17,6 +17,35 @@
 - **Knowledge graph is STALE** (`cmd/` changed) — regenerate with `/understand` before relying on `.understand-anything/`.
 > Updated after each session that modifies this repo.
 
+## Session: waldur-outfitter-integration — gate-model-serving-on-model-centric (2026-08-24)
+
+### What changed
+
+Companion to the metalib gate (model-serving stack now only fires on
+model-centric pulls):
+
+- `cmd/repackage.go` — `warmManipulationCache` now sets
+  `ctx = types.WithRequestedModel(ctx, rpName)` +
+  `types.WithRequestedQuant(ctx, rpQuantTag)` before
+  `ApplyManipulationsToManifests`, so the (now-gated) model-serving stack still
+  fires during cache precomputation. Without it the cache would store the
+  unmanipulated runtime.
+- `misc/gocd/bin/test-repackage.sh` — step 5 now verifies injection via the
+  **model-centric pull** (`models/testmodel:q4-km`), not the collection pull.
+  Adds `--runtime apps/testmodel-runtime` to the repackage call (so
+  `resolveModelCentricRuntime` finds a composition) and pushes the runtime at
+  `:latest` (the tag the resolver hardcodes). New step 5a asserts the collection
+  pull is NOT injected (gate regression guard).
+
+### Gotchas
+- `resolveModelCentricRuntime` hardcodes runtime tag `"latest"` — the runtime
+  image the model composes onto must be pushed at `:latest`, regardless of the
+  tag in the runtime registration (`runtime register --image ...:1` is only for
+  the `/api/v1/runtimes` surface, not the pull path).
+- `--runtime` on `repackage` is what creates the composition annotation the
+  model-centric resolver reads; without it a `models/<name>:<quant>` pull
+  returns nothing (no composition → no rewrite → 404).
+
 ## What This Repo Is
 
 Admin and seed tooling for MetaHub. Parses upstream registries
