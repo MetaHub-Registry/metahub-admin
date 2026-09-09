@@ -20,6 +20,18 @@ fi
 METALIB_IMAGE=$(yq -r .image metalib_result/result.yaml)
 echo "> metalib image: ${METALIB_IMAGE}"
 
+# Harbor login: the metalib image moved from zot (anonymous, insecure) to
+# harbor, which requires pull auth. build-image.sh logs in on the Build
+# stage already; the Test stage (fresh dind, own dockerd) needs its own.
+if [[ ! -z "${HARBOR_REG}" && ! -z "${HARBOR_TOKEN}" ]];then
+   echo "> Login to ${HARBOR_REG} as 'robot$good'"
+   docker login ${HARBOR_REG} \
+      -u 'robot$good' \
+      -p "${HARBOR_TOKEN}"
+else
+   echo "> WARNING: HARBOR_REG/HARBOR_TOKEN not set; pulling ${METALIB_IMAGE} may fail with 401"
+fi
+
 # Export the metalib source from its built image and replace the module locally.
 mkdir -p ext/metalib
 (
