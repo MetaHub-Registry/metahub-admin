@@ -40,6 +40,20 @@ else
    echo "No metalib_result/result.yaml to get the metalib image"
    exit 1
 fi
+
+# Harbor login: the metalib image moved from zot (anonymous, insecure) to
+# harbor, which requires pull auth — the docker build (FROM/METALIB_IMAGE)
+# and the docker export below both pull it. build-image.sh (the other Build
+# job) logs in on its own; each job pod runs its own dockerd.
+if [[ ! -z "${HARBOR_REG}" && ! -z "${HARBOR_TOKEN}" ]];then
+   echo "> Login to ${HARBOR_REG} as 'robot$good'"
+   docker login ${HARBOR_REG} \
+      -u 'robot$good' \
+      -p "${HARBOR_TOKEN}"
+else
+   echo "> WARNING: HARBOR_REG/HARBOR_TOKEN not set; pulling ${METALIB_IMAGE} may fail with 401"
+fi
+
 set -ex
 docker build . --build-arg=METALIB_IMAGE=${METALIB_IMAGE} -t test --target=cbuilder
 docker run -d --name target test sleep 30
