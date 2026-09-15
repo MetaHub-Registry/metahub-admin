@@ -2,6 +2,9 @@ package cmd
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
+	"os"
 
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
@@ -64,6 +67,121 @@ func modelServingProfiles(prfs []types.Profile) []types.Profile {
 	return serving
 }
 
+// effectiveConfigBytes renders the model's effective runtime config for one
+// serving profile: Model.Config.Default merged with any profile-pinned
+// Config.Overrides entry (Profile == profile). Rule-based overrides are
+// deferred to the pull path; profile-pinned ones are applied here so the
+// synthesised config artefact carries the CE-declared per-profile config.
+// Returns nil when the rendered config is empty — the caller then leaves
+// rpConfigFile unset so repackage falls back to its built-in default.
+// A `default: auto` (derive-from-runtime) declaration is not yet supported
+// (B5 render is future work) and yields nil with a warning-worthy error.
+func effectiveConfigBytes(m yamlCfg.Model, profile string) ([]byte, error) {
+	cfg := map[string]any{}
+	switch d := m.Config.Default.(type) {
+	case map[string]any:
+		for k, v := range d {
+			cfg[k] = v
+		}
+	case string:
+		if d != "" && d != "auto" {
+			return nil, fmt.Errorf("model %q: unsupported config.default %q (map or \"auto\")", m.Name, d)
+		}
+		if d == "auto" {
+			return nil, fmt.Errorf("model %q: config.default \"auto\" (derive) not implemented yet", m.Name)
+		}
+	case nil:
+		// no default declared
+	default:
+		return nil, fmt.Errorf("model %q: unsupported config.default type %T", m.Name, m.Config.Default)
+	}
+	for _, o := range m.Config.Overrides {
+		if o.Profile == profile {
+			for k, v := range o.Config {
+				cfg[k] = v
+			}
+		}
+	}
+	if len(cfg) == 0 {
+		return nil, nil
+	}
+	return json.Marshal(cfg)
+}
+
+// writeTempConfig writes configBytes to a temp JSON file for rpConfigFile and
+// returns the path (the caller removes it after the run).
+func writeTempConfig(cfgBytes []byte) (string, error) {
+	f, err := os.CreateTemp("", "metahub-model-config-*.json")
+	if err != nil {
+		return "", err
+	}
+	if _, err := f.Write(cfgBytes); err != nil {
+		f.Close()
+		os.Remove(f.Name())
+		return "", err
+	}
+	return f.Name(), f.Close()
+}
+
+// loadModels walks the given directories and returns the CE models found,
+// keyed like FindModels. A directory that fails to scan is logged and skipped.
+func loadModels(ctx context.Context, dirs []string, l *logrus.Entry) map[string]yamlCfg.Model {
+	models := map[string]yamlCfg.Model{}
+	for _, a := range dirs {
+		ms, err := yamlCfg.FindModels(ctx, a)
+		if err != nil {
+			l.Error(err)
+			continue
+		}
+		for k, m := range ms {
+			models[k] = m
+		}
+	}
+	return models
+}
+
+// stageTempConfig renders the model's effective config for one profile into a
+// temp file (tracked in tmpConfigs for cleanup) and returns the path, or ""
+// when nothing was rendered (repackage then uses its built-in default).
+func stageTempConfig(m yamlCfg.Model, profile string, tmpConfigs *[]string, l *logrus.Entry) string {
+	cfgBytes, err := effectiveConfigBytes(m, profile)
+	if err != nil {
+		l.Warnf("  config render for profile %s failed (%v) — using repackage default", profile, err)
+		return ""
+	}
+	if len(cfgBytes) == 0 {
+		return ""
+	}
+	path, err := writeTempConfig(cfgBytes)
+	if err != nil {
+		l.Warnf("  temp config write failed (%v) — using repackage default", err)
+		return ""
+	}
+	*tmpConfigs = append(*tmpConfigs, path)
+	l.Infof("  config for profile %s: %s", profile, string(cfgBytes))
+	return path
+}
+
+// repackageModelQuant drives one (quant × profile) repackage via the shared
+// repackage core, wired from the parse-models flags.
+func repackageModelQuant(ctx context.Context, mag magazine.Magazine, m yamlCfg.Model, q yamlCfg.ModelQuant, prf types.Profile, configFile string, l *logrus.Entry) {
+	rpArtifactRepo = modelArtifactRepo(m.Name, q.Tag)
+	rpArtifactType = pmArtifactType
+	rpName = m.Name
+	rpQuantTag = q.Tag
+	rpProfile = prf.Label
+	rpRuntime = m.Runtime
+	rpTargetPath = ""
+	rpRegistryURL = pmRegistryURL
+	rpRegistryUser = pmRegistryUser
+	rpRegistryPass = pmRegistryPass
+	rpRegistryTLS = pmRegistryTLS
+	rpSkipManip = false
+	rpConfigFile = configFile
+	l.Infof("  repackage %s:%s → profile %s (artifact %s, runtime %s)", m.Name, q.Tag, prf.Label, rpArtifactRepo, m.Runtime)
+	repackageOnce(ctx, mag)
+}
+
 func pModelsCmd(cmd *cobra.Command, args []string) {
 	l := logrus.WithFields(logrus.Fields{"package": "cmd/parse_models", "func": "pModelsCmd"})
 	ctx := context.Background()
@@ -72,17 +190,7 @@ func pModelsCmd(cmd *cobra.Command, args []string) {
 		l.Error("provide the directory to recursively search for models/ YAML files as the first argument")
 		return
 	}
-
-	models := map[string]yamlCfg.Model{}
-	for _, a := range args {
-		ms, err := yamlCfg.FindModels(ctx, a)
-		if err != nil {
-			l.Error(err)
-		}
-		for k, m := range ms {
-			models[k] = m
-		}
-	}
+	models := loadModels(ctx, args, l)
 
 	mag, ctx, err := magazine.NewMagazine(cmd, MH_TABLES)
 	if err != nil {
@@ -99,25 +207,21 @@ func pModelsCmd(cmd *cobra.Command, args []string) {
 		return
 	}
 
+	tmpConfigs := make([]string, 0)
+	defer func() {
+		for _, p := range tmpConfigs {
+			os.Remove(p)
+		}
+	}()
 	for _, m := range models {
 		l.Infof("# Model %s (runtime=%s, %d quants) → %d model-serving profile(s)", m.Name, m.Runtime, len(m.Quants), len(serving))
 		for _, q := range m.Quants {
 			for _, prf := range serving {
-				// Drive the shared repackage core via its rp* parameters.
-				rpArtifactRepo = modelArtifactRepo(m.Name, q.Tag)
-				rpArtifactType = pmArtifactType
-				rpName = m.Name
-				rpQuantTag = q.Tag
-				rpProfile = prf.Label
-				rpRuntime = m.Runtime
-				rpTargetPath = ""
-				rpRegistryURL = pmRegistryURL
-				rpRegistryUser = pmRegistryUser
-				rpRegistryPass = pmRegistryPass
-				rpRegistryTLS = pmRegistryTLS
-				rpSkipManip = false
-				l.Infof("  repackage %s:%s → profile %s (artifact %s, runtime %s)", m.Name, q.Tag, prf.Label, rpArtifactRepo, m.Runtime)
-				repackageOnce(ctx, mag)
+				// Honor the CE-declared per-profile config: render default +
+				// profile-pinned overrides into a temp file consumed by
+				// repackage's synthetic-config path (defaultConfigBytes).
+				configFile := stageTempConfig(m, prf.Label, &tmpConfigs, l)
+				repackageModelQuant(ctx, mag, m, q, prf, configFile, l)
 			}
 		}
 	}
