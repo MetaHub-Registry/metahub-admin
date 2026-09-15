@@ -36,7 +36,6 @@ func init() {
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
 	emptyUsage := fmt.Sprintf("Empty the graph before parsing (%s)", strings.Join(emptyGraphOptions, "|"))
-	parseCmd.PersistentFlags().StringVar(&emptyGrah, "registry", "", emptyUsage)
 	parseCmd.PersistentFlags().String("cache-registry", "", "Local registry to fetch from first before reaching out to upstream")
 	parseCmd.PersistentFlags().String("cache-layers", "all", "Number of layers to cache (all|>0)")
 	parseCmd.PersistentFlags().StringVar(&emptyGrah, "empty-graph", "none", emptyUsage)
