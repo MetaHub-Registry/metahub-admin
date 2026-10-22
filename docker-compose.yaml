@@ -16,7 +16,7 @@ services:
       target: dev
     volumes:
       - ce_data:/opt/community-edition
-      - ../metahub-core:/go/metalib
+      - ../metahub-core:/go/metahub-core
       - .:/go/metahub-admin
     networks:
       - mh-internal

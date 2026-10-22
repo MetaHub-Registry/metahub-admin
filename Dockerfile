@@ -35,10 +35,10 @@ ARG TARGETOS TARGETARCH
 RUN apk add --no-cache git zig
 WORKDIR /go/metahub-admin
 COPY . ./
-COPY --from=metalib /pkg ext/metalib/pkg
-COPY --from=metalib /go.sum /go.mod ext/metalib/
-RUN go mod edit -replace github.com/metahub-registry/metahub-core=/go/metahub-admin/ext/metalib
-RUN find ext/metalib
+COPY --from=metalib /pkg ext/metahub-core/pkg
+COPY --from=metalib /go.sum /go.mod ext/metahub-core/
+RUN go mod edit -replace github.com/metahub-registry/metahub-core=/go/metahub-admin/ext/metahub-core
+RUN find ext/metahub-core
 RUN --mount=type=cache,target=/go/pkg/mod go mod tidy
 ENV CGO_ENABLED=1 GOOS=linux
 # -fno-sanitize=undefined: zig cc instruments C with UBSan by default but does
@@ -72,9 +72,9 @@ ARG TARGETOS TARGETARCH
 RUN apk add --no-cache git gcc musl-dev vim bash zig
 WORKDIR /go/metahub-admin
 COPY . ./
-COPY --from=metalib /pkg ext/metalib/pkg
-COPY --from=metalib /go.sum /go.mod ext/metalib/
-RUN go mod edit -replace github.com/metahub-registry/metahub-core=/go/metahub-admin/ext/metalib
+COPY --from=metalib /pkg ext/metahub-core/pkg
+COPY --from=metalib /go.sum /go.mod ext/metahub-core/
+RUN go mod edit -replace github.com/metahub-registry/metahub-core=/go/metahub-admin/ext/metahub-core
 RUN --mount=type=cache,target=/go/pkg/mod go mod tidy
 ENV CGO_ENABLED=1 GOOS=linux
 # -fno-sanitize=undefined: see note in the cbuilder stage
