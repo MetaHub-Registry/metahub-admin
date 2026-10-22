@@ -45,7 +45,7 @@
   are not applied at ingest; only profile-pinned ones.
 - `config.default: auto` (derive from runtime) yields a warning and falls
   back to the repackage default.
-- community-edition `openspec/changes/model-centric-pull/tasks.md` is stale —
+- community-edition `MetaHub-Registry/openspec` (`changes/model-centric-pull/tasks.md`) is stale —
   artifacts exist but boxes are unchecked.
 
 ## Gotchas

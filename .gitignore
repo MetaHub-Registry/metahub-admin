@@ -12,4 +12,6 @@ misc/compose/sonarqube/**
 **/.DS_Store
 misc/config/hvk.yaml
 test.log
-.understand-anything/.trash-*
+openspec/changes/
+agent.compose.yaml
+agent.compose.lock
