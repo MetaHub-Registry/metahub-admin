@@ -4,7 +4,7 @@ go 1.24
 
 require (
 	github.com/magiconair/properties v1.8.7
-	github.com/metahub-registry/metahub-core v0.3.10
+	github.com/metahub-registry/metahub-core v0.3.11-0.20261023111609-93d6c2390f39
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/opencontainers/go-digest v1.0.0
 	github.com/pkg/errors v0.9.1
