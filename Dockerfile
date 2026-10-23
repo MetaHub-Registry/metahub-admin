@@ -18,19 +18,19 @@ ARG METALIB_IMAGE
 FROM --platform=$BUILDPLATFORM $METALIB_IMAGE AS metalib
 
 # gonja-cli is fetched for the TARGET arch; the fetch itself runs natively.
-FROM --platform=$BUILDPLATFORM alpine:3.22 AS gonja
+FROM --platform=$BUILDPLATFORM mirror.gcr.io/library/alpine:3.22 AS gonja
 ARG TARGETARCH
 RUN apk add --no-cache wget \
  && wget -qO- https://gitlab.com/qnib-golang/gonja-cli/-/releases/v0.0.2/downloads/gonja-cli_0.0.2_linux_${TARGETARCH}.tar.gz |tar xfz - -C /usr/local/bin
 
 # CA bundle is arch-independent; the stage is pinned so apk runs natively.
-FROM --platform=$BUILDPLATFORM alpine:3.22 AS certs
+FROM --platform=$BUILDPLATFORM mirror.gcr.io/library/alpine:3.22 AS certs
 RUN apk update && apk add ca-certificates
 
 # --- Go build: native on the builder, cross-compiles to TARGETARCH ---------
 # Alpine base (golang:1.24.4 is Debian — no apk): zig comes from the alpine
 # package repo and serves as the cgo cross-compiler.
-FROM --platform=$BUILDPLATFORM golang:1.24-alpine3.22 AS cbuilder
+FROM --platform=$BUILDPLATFORM mirror.gcr.io/library/golang:1.24-alpine3.22 AS cbuilder
 ARG TARGETOS TARGETARCH
 RUN apk add --no-cache git zig
 WORKDIR /go/metahub-admin
@@ -58,16 +58,16 @@ RUN --mount=type=cache,target=/go/pkg/mod case "${TARGETARCH}" in \
     CGO_ENABLED=1 GOOS="${TARGETOS:-linux}" GOARCH="${TARGETARCH}" \
     go build -a -ldflags '-extldflags "-static"' .
 
-FROM busybox:1.35.0 AS busybox
+FROM mirror.gcr.io/library/busybox:1.35.0 AS busybox
 COPY --from=cbuilder /go/metahub-admin/metahub-admin /usr/bin/metahub-admin
 COPY --from=certs /etc/ssl/certs /etc/ssl/certs
 
-FROM --platform=$BUILDPLATFORM golang:1.24-alpine3.22 AS dev
+FROM --platform=$BUILDPLATFORM mirror.gcr.io/library/golang:1.24-alpine3.22 AS dev
 RUN apk add --no-cache git gcc musl-dev bash vim curl wget
 COPY ./misc/docker/dev/bash_history /root/.bash_history
 
 # --- Go build (second target of the same source) ---------------------------
-FROM --platform=$BUILDPLATFORM golang:1.24-alpine3.22 AS go
+FROM --platform=$BUILDPLATFORM mirror.gcr.io/library/golang:1.24-alpine3.22 AS go
 ARG TARGETOS TARGETARCH
 RUN apk add --no-cache git gcc musl-dev vim bash zig
 WORKDIR /go/metahub-admin
@@ -89,7 +89,7 @@ RUN --mount=type=cache,target=/go/pkg/mod case "${TARGETARCH}" in \
     go build -a -ldflags '-extldflags "-static"' .
 
 # --- runtime (per-arch; RUNs run under QEMU for the foreign leg) -----------
-FROM alpine:3.22
+FROM mirror.gcr.io/library/alpine:3.22
 ARG TARGETARCH
 RUN apk add ca-certificates bash git curl jq
 # oras CLI: the product image doubles as the model-seed/repackage image (the
