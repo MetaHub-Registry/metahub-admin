@@ -12,6 +12,5 @@ misc/compose/sonarqube/**
 **/.DS_Store
 misc/config/hvk.yaml
 test.log
-openspec/changes/
 agent.compose.yaml
 agent.compose.lock

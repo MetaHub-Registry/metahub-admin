@@ -54,3 +54,12 @@
   pipelines pass a rendered config file.
 - Sonar gate fails on any new S3776 — keep parse-style commands factored into
   small helpers.
+
+## 2026-10-23 — open-source-metahub
+
+- Pinned `metahub-core` at `v0.3.11-0.20261023073118-725938dd0b1e` to keep the
+  module graph aligned with `metahub-api`; the admin does not call the new
+  natural-key lookups.
+- Added the public CI fast lane + aggregator
+  (`openspec/changes/add-public-ci`).
+- Use `GOWORK=off` to build against the pinned module.
