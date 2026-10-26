@@ -28,9 +28,9 @@ FROM --platform=$BUILDPLATFORM mirror.gcr.io/library/alpine:3.22 AS certs
 RUN apk update && apk add ca-certificates
 
 # --- Go build: native on the builder, cross-compiles to TARGETARCH ---------
-# Alpine base (golang:1.24.4 is Debian — no apk): zig comes from the alpine
+# Alpine base (golang:1.26 is Debian — no apk): zig comes from the alpine
 # package repo and serves as the cgo cross-compiler.
-FROM --platform=$BUILDPLATFORM mirror.gcr.io/library/golang:1.24-alpine3.22 AS cbuilder
+FROM --platform=$BUILDPLATFORM mirror.gcr.io/library/golang:1.26-alpine AS cbuilder
 ARG TARGETOS TARGETARCH
 RUN apk add --no-cache git zig
 WORKDIR /go/metahub-admin
@@ -62,12 +62,12 @@ FROM mirror.gcr.io/library/busybox:1.35.0 AS busybox
 COPY --from=cbuilder /go/metahub-admin/metahub-admin /usr/bin/metahub-admin
 COPY --from=certs /etc/ssl/certs /etc/ssl/certs
 
-FROM --platform=$BUILDPLATFORM mirror.gcr.io/library/golang:1.24-alpine3.22 AS dev
+FROM --platform=$BUILDPLATFORM mirror.gcr.io/library/golang:1.26-alpine AS dev
 RUN apk add --no-cache git gcc musl-dev bash vim curl wget
 COPY ./misc/docker/dev/bash_history /root/.bash_history
 
 # --- Go build (second target of the same source) ---------------------------
-FROM --platform=$BUILDPLATFORM mirror.gcr.io/library/golang:1.24-alpine3.22 AS go
+FROM --platform=$BUILDPLATFORM mirror.gcr.io/library/golang:1.26-alpine AS go
 ARG TARGETOS TARGETARCH
 RUN apk add --no-cache git gcc musl-dev vim bash zig
 WORKDIR /go/metahub-admin
