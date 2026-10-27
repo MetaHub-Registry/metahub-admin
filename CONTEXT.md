@@ -63,3 +63,16 @@
 - Added the public CI fast lane + aggregator
   (`openspec/changes/add-public-ci`).
 - Use `GOWORK=off` to build against the pinned module.
+
+## 2026-10-27 — Dependabot alerts enabled, backlog decomposed
+
+Alerting had been off for the whole open-source session. Enabling it returned
+58 open alerts here — 10 critical, 14 high, 30 medium, 4 low. The
+dependency fingerprint matches `metahub-api` (both consume `metahub-core`),
+minus the `go-jose` path.
+
+Two changes now sit in `openspec/changes/`:
+- `dependabot-security-alert-remediation` — outstanding work, same order as the
+  API: core first, re-pin, then local leftovers.
+- `refresh-go-dependencies-and-toolchain` — **already implemented**; the durable
+  record of the `go-toolchain-policy` capability.
