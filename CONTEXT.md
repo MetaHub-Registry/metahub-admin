@@ -76,3 +76,40 @@ Two changes now sit in `openspec/changes/`:
   API: core first, re-pin, then local leftovers.
 - `refresh-go-dependencies-and-toolchain` — **already implemented**; the durable
   record of the `go-toolchain-policy` capability.
+
+## 2026-10-27 — Remediation: core re-pin + root-module bumps
+
+The admin now consumes core
+`v0.3.12-0.20261027191418-48c134ebea11` (the `dependabot-backlog` core commit).
+The re-pin closed the `x/crypto` (→ 0.58.0), `otel/sdk` (→ 1.47.0) and `grpc`
+(→ 1.83.2) families and forced the module floor to **Go 1.26.0** (CI and the
+Dockerfile already use 1.26). The remaining bumps were applied directly:
+
+| module | was | now | advisory |
+| --- | --- | --- | --- |
+| `containerd/containerd` | 1.7.12 | **1.7.33** | GHSA-pwhc-rpq9-4c8w, GHSA-xhf5-7wjv-pqxp |
+| `containers/image/v5` | 5.23.0 | **5.29.3** | GHSA-6wvf-f2vw-3425 |
+| `docker/distribution` | 2.8.1+incompatible | **2.8.3+incompatible** | GHSA-hqxw-f8mx-cpmw |
+| `docker/docker` | 25.0.2+incompatible | **25.0.6+incompatible** | GHSA-v23v-6jw2-98fq (critical) |
+| `klauspost/compress` | 1.16.4 | **1.18.7** | GHSA-259r-337f-4rfw |
+
+### Accepted advisories with no upstream fix (revisit 2027-01-27)
+
+`docker/docker` is pulled in through `metahub-core`'s `magazine`/`minio`
+packages and their testcontainers helpers. Both remaining highs are
+**daemon-side**; this binary is a Docker *client* and never runs a daemon:
+
+| advisory | severity | affected | why it is not reachable |
+| --- | --- | --- | --- |
+| GHSA-rg2x-37c3-w2rh | high | `docker/docker <= 28.5.2` | race in the daemon's `docker cp` bind-mount setup; no daemon code path is served |
+| GHSA-x86f-5xw2-fm2r | high | `docker/docker <= 28.5.2` | the daemon resolves decompression binaries on `PUT /containers/{id}/archive`; that endpoint is Docker Engine's, not this service's |
+
+There is no `distribution/distribution` alert in this repository (not in its
+module graph), so no acceptance is needed for it here. The Docker Engine on
+dev/CI hosts that run testcontainers is the mitigation surface for the two
+daemon advisories.
+
+Verification on the branch: `GOWORK=off go build ./...` and `go vet ./...`
+clean; the short suite passes. `./test.sh` and the GoCD dev pipeline results
+are recorded in the session DevDiary. Alert closure is only observable on
+`main` after merge — the Dependabot alerts API reports the default branch.
