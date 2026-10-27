@@ -80,7 +80,7 @@ Two changes now sit in `openspec/changes/`:
 ## 2026-10-27 — Remediation: core re-pin + root-module bumps
 
 The admin now consumes core
-`v0.3.12-0.20261027190128-c7feadc827cd` (the `dependabot-backlog` core commit).
+`v0.3.12-0.20261027191418-48c134ebea11` (the `dependabot-backlog` core commit).
 The re-pin closed the `x/crypto` (→ 0.58.0), `otel/sdk` (→ 1.47.0) and `grpc`
 (→ 1.83.2) families and forced the module floor to **Go 1.26.0** (CI and the
 Dockerfile already use 1.26). The remaining bumps were applied directly:
