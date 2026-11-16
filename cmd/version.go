@@ -12,7 +12,7 @@ import (
 	mlver "github.com/metahub-registry/metahub-core/pkg/version"
 )
 
-var version = "2.5.3"
+var version = "2.5.4"
 var jsonFlag bool
 
 // parseCmd represents the parse command
