@@ -3,7 +3,7 @@ module github.com/metahub-registry/metahub-admin
 go 1.26.0
 
 require (
-	github.com/magiconair/properties v1.8.7
+	github.com/magiconair/properties v1.18.13
 	github.com/metahub-registry/metahub-core v0.3.13
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/opencontainers/go-digest v1.0.0
